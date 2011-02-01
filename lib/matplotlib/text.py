@@ -25,8 +25,9 @@ from matplotlib.artist import allow_rasterization
 import matplotlib.nxutils as nxutils
 
 from matplotlib.path import Path
-import matplotlib.font_manager as font_manager
-from matplotlib.ft2font import FT2Font
+# import matplotlib.font_manager as font_manager
+# from matplotlib.ft2font import FT2Font
+# from matplotlib import freetype
 
 from matplotlib.backend_bases import RendererBase
 

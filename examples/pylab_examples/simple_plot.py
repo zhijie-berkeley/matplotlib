@@ -8,4 +8,8 @@ xlabel('time (s)')
 ylabel('voltage (mV)')
 title('About as simple as it gets, folks')
 grid(True)
+
+import sys
+print 'ft2font' in str(sys.modules)
+
 show()

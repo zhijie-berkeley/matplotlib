@@ -30,13 +30,14 @@ from matplotlib.backend_bases import RendererBase,\
 from matplotlib.cbook import is_string_like, maxdict
 from matplotlib.figure import Figure
 from matplotlib.font_manager import findfont
-from matplotlib.ft2font import FT2Font, LOAD_FORCE_AUTOHINT, LOAD_NO_HINTING
 from matplotlib.mathtext import MathTextParser
 from matplotlib.path import Path
 from matplotlib.transforms import Bbox, BboxBase
 
 from _backend_agg import RendererAgg as _RendererAgg
 from matplotlib import _png
+from matplotlib import freetype_util
+from freetype import ft_enums
 
 backend_version = 'v2.2'
 
@@ -71,9 +72,9 @@ class RendererAgg(RendererBase):
 
     def _get_hinting_flag(self):
         if rcParams['text.hinting']:
-            return LOAD_FORCE_AUTOHINT
+            return ft_enums.FT_LOAD_FORCE_AUTOHINT
         else:
-            return LOAD_NO_HINTING
+            return ft_enums.FT_LOAD_NO_HINTING
 
     # for filtering to work with rasterization, methods needs to be wrapped.
     # maybe there is better way to do it.
@@ -82,7 +83,7 @@ class RendererAgg(RendererBase):
 
     def draw_path_collection(self, *kl, **kw):
         return self._renderer.draw_path_collection(*kl, **kw)
-        
+
     def _update_methods(self):
         #self.draw_path = self._renderer.draw_path  # see below
         #self.draw_markers = self._renderer.draw_markers
@@ -144,17 +145,19 @@ class RendererAgg(RendererBase):
         flags = self._get_hinting_flag()
         font = self._get_agg_font(prop)
         if font is None: return None
-        if len(s) == 1 and ord(s) > 127:
-            font.load_char(ord(s), flags=flags)
-        else:
-            # We pass '0' for angle here, since it will be rotated (in raster
-            # space) in the following call to draw_text_image).
-            font.set_text(s, 0, flags=flags)
-        font.draw_glyphs_to_bitmap()
+        # if len(s) == 1 and ord(s) > 127:
+        #     font.load_char(ord(s), flags=flags)
+        # else:
+        #     # We pass '0' for angle here, since it will be rotated (in raster
+        #     # space) in the following call to draw_text_image).
+        #     font.set_text(s, 0, flags=flags)
+        # font.draw_glyphs_to_bitmap()
 
         #print x, y, int(x), int(y), s
 
-        self._renderer.draw_text_image(font.get_image(), int(x), int(y) + 1, angle, gc)
+        Z = freetype_util.render_string(font, s)
+
+        self._renderer.draw_text_image(Z, int(x), int(y) + 1, angle, gc)
 
     def get_text_width_height_descent(self, s, prop, ismath):
         """
@@ -181,12 +184,7 @@ class RendererAgg(RendererBase):
 
         flags = self._get_hinting_flag()
         font = self._get_agg_font(prop)
-        font.set_text(s, 0.0, flags=flags)  # the width and height of unrotated string
-        w, h = font.get_width_height()
-        d = font.get_descent()
-        w /= 64.0  # convert from subpixels
-        h /= 64.0
-        d /= 64.0
+        w, h, d = freetype_util.get_width_height_descent(font, s)
         return w, h, d
 
 
@@ -221,13 +219,15 @@ class RendererAgg(RendererBase):
             fname = findfont(prop)
             font = self._fontd.get(fname)
             if font is None:
-                font = FT2Font(str(fname))
+                font = freetype_util.Face(str(fname))
                 self._fontd[fname] = font
             self._fontd[key] = font
 
-        font.clear()
+        # font.clear()
         size = prop.get_size_in_points()
-        font.set_size(size, self.dpi)
+        font.set_char_size(height = int(size * 64),
+                           hres = int(self.dpi),
+                           vres = int(self.dpi))
 
         return font
 

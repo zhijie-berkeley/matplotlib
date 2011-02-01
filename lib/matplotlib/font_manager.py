@@ -49,7 +49,6 @@ except NameError:
     from sets import Set as set
 import matplotlib
 from matplotlib import afm
-from matplotlib import ft2font
 from matplotlib import rcParams, get_configdir
 from matplotlib.cbook import is_string_like
 from matplotlib.fontconfig_pattern import \
@@ -59,6 +58,8 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
+import freetype
 
 USE_FONTCONFIG = False
 
@@ -597,7 +598,7 @@ def createFontList(fontfiles, fontext='ttf'):
             prop = afmFontProperty(fpath, font)
         else:
             try:
-                font = ft2font.FT2Font(str(fpath))
+                font = freetype.Face(str(fpath))
             except RuntimeError:
                 verbose.report("Could not open font file %s"%fpath)
                 continue
@@ -739,7 +740,7 @@ class FontProperties(object):
         Return the name of the font that best matches the font
         properties.
         """
-        return ft2font.FT2Font(str(findfont(self))).family_name
+        return freetype.Face(str(findfont(self))).family_name
 
     def get_style(self):
         """
