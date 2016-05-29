@@ -205,8 +205,9 @@ class Tick(artist.Artist):
         This function always returns false.  It is more useful to test if the
         axis as a whole contains the mouse rather than the set of tick marks.
         """
-        if six.callable(self._contains):
-            return self._contains(self, mouseevent)
+        inside, info = self._default_contains(mouseevent)
+        if inside is not None:
+            return inside, info
         return False, {}
 
     def set_pad(self, val):
@@ -1704,8 +1705,9 @@ class XAxis(Axis):
     def contains(self, mouseevent):
         """Test whether the mouse event occured in the x axis.
         """
-        if six.callable(self._contains):
-            return self._contains(self, mouseevent)
+        inside, info = self._default_contains(mouseevent)
+        if inside is not None:
+            return inside, info
 
         x, y = mouseevent.x, mouseevent.y
         try:
@@ -2038,8 +2040,9 @@ class YAxis(Axis):
 
         Returns *True* | *False*
         """
-        if six.callable(self._contains):
-            return self._contains(self, mouseevent)
+        inside, info = self._default_contains(mouseevent)
+        if inside is not None:
+            return inside, info
 
         x, y = mouseevent.x, mouseevent.y
         try:

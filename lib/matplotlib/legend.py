@@ -980,6 +980,9 @@ class Legend(Artist):
         return ox, oy
 
     def contains(self, event):
+        inside, info = self._default_contains(mouseevent)
+        if inside is not None:
+            return inside, info
         return self.legendPatch.contains(event)
 
     def draggable(self, state=None, use_blit=False, update="loc"):

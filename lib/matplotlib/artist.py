@@ -385,6 +385,32 @@ class Artist(object):
         """
         return []
 
+    def _default_contains(self, mouseevent, canvas=None):
+        """Base impl. for checking whether a mouseevent happened in an artist.
+
+        1. If the artist defines a custom checker, use it.
+        2. If the event did not occur in the same canvas, reject it.
+        3. Otherwise, return `None, {}`, indicating that the subclass'
+           implementation should be used.
+
+        Subclasses should start their definition of `contains` as follows:
+
+            inside, info = self._default_contains(mouseevent)
+            if inside is not None:
+                return inside, info
+            # subclass-specific implementation follows
+
+        The `canvas` kwarg is provided for the implementation of
+        `Figure.contains`.
+        """
+        if callable(self._contains):
+            return self._contains(self, mouseevent)
+        if canvas is None:
+            canvas = self.figure.canvas
+        if mouseevent.canvas is not canvas:
+            return False, {}
+        return None, {}
+
     def contains(self, mouseevent):
         """Test whether the artist contains the mouse event.
 
@@ -392,8 +418,9 @@ class Artist(object):
         selection, such as which points are contained in the pick radius.  See
         individual artists for details.
         """
-        if six.callable(self._contains):
-            return self._contains(self, mouseevent)
+        inside, info = self._default_contains(mouseevent)
+        if inside is not None:
+            return inside, info
         warnings.warn("'%s' needs 'contains' method" % self.__class__.__name__)
         return False, {}
 

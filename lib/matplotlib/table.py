@@ -345,8 +345,9 @@ class Table(Artist):
 
         Returns T/F, {}
         """
-        if six.callable(self._contains):
-            return self._contains(self, mouseevent)
+        inside, info = self._default_contains(mouseevent)
+        if inside is not None:
+            return inside, info
 
         # TODO: Return index of the cell containing the cursor so that the user
         # doesn't have to bind to each one individually.

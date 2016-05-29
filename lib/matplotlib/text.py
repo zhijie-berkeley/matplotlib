@@ -258,8 +258,9 @@ class Text(Artist):
 
         Returns True or False.
         """
-        if six.callable(self._contains):
-            return self._contains(self, mouseevent)
+        inside, info = self._default_contains(mouseevent)
+        if inside is not None:
+            return inside, info
 
         if not self.get_visible() or self._renderer is None:
             return False, {}
@@ -2086,6 +2087,9 @@ class Annotation(Text, _AnnotationBase):
             self.arrow_patch = None
 
     def contains(self, event):
+        inside, info = self._default_contains(mouseevent)
+        if inside is not None:
+            return inside, info
         contains, tinfo = Text.contains(self, event)
         if self.arrow is not None:
             in_arrow, _ = self.arrow.contains(event)
