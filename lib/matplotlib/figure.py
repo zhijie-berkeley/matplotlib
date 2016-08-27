@@ -351,7 +351,7 @@ class Figure(Artist):
         self.set_tight_layout(tight_layout)
 
         self._axstack = AxesStack()  # track all figure axes and current axes
-        self.clf()
+        self._clf_inner(_init=True)
         self._cachedRenderer = None
 
     # TODO: I'd like to dynamically add the _repr_html_ method
@@ -1177,23 +1177,31 @@ class Figure(Artist):
         Set *keep_observers* to True if, for example,
         a gui widget is tracking the axes in the figure.
         """
+        return self._clf_inner(keep_observers=keep_observers)
+
+    def _clf_inner(self, keep_observers=False, _init=False):
         self.suppressComposite = None
         self.callbacks = cbook.CallbackRegistry()
 
         for ax in tuple(self.axes):  # Iterate over the copy.
-            ax.cla()
+            ax.cla(_init=_init)
             self.delaxes(ax)         # removes ax from self._axstack
 
         toolbar = getattr(self.canvas, 'toolbar', None)
         if toolbar is not None:
             toolbar.update()
         self._axstack.clear()
-        self.artists = []
-        self.lines = []
-        self.patches = []
-        self.texts = []
-        self.images = []
-        self.legends = []
+        if _init:
+            self.artists = []
+            self.lines = []
+            self.patches = []
+            self.texts = []
+            self.images = []
+            self.legends = []
+        else:
+            for artist in (self.artists + self.lines + self.patches
+                           + self.texts + self.images + self.legends):
+                artist.remove()
         if not keep_observers:
             self._axobservers = []
         self._suptitle = None

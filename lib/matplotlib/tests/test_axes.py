@@ -123,6 +123,16 @@ def test_twin_axis_locaters_formatters():
 
 
 @cleanup
+def test_cla():
+    fig, ax = plt.subplots()
+    l, = ax.plot([1, 2])
+    ax.cla()
+    assert ax.lines == []
+    assert l.axes is None
+    assert l.figure is None
+
+
+@cleanup
 def test_twinx_cla():
     fig, ax = plt.subplots()
     ax2 = ax.twinx()

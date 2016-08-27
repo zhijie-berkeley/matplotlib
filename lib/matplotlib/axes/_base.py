@@ -540,7 +540,7 @@ class _AxesBase(martist.Artist):
 
         self._hold = rcParams['axes.hold']
         self._connected = {}  # a dict from events to (id, func)
-        self.cla()
+        self._cla_inner(_init=True)
         # funcs used to format x and y - fall back on major formatters
         self.fmt_xdata = None
         self.fmt_ydata = None
@@ -943,6 +943,9 @@ class _AxesBase(martist.Artist):
 
     def cla(self):
         """Clear the current axes."""
+        return self._cla_inner()
+
+    def _cla_inner(self, _init=False):
         # Note: this is called by Axes.__init__()
 
         # stash the current visibility state
@@ -1028,17 +1031,25 @@ class _AxesBase(martist.Artist):
         self._get_patches_for_fill = _process_plot_var_args(self, 'fill')
 
         self._gridOn = rcParams['axes.grid']
-        self.lines = []
-        self.patches = []
-        self.texts = []
-        self.tables = []
-        self.artists = []
-        self.images = []
+
+        if _init:
+            self.lines = []
+            self.patches = []
+            self.texts = []
+            self.tables = []
+            self.artists = []
+            self.images = []
+            self.collections = []  # collection.Collection instances
+            self.containers = []
+        else:
+            for artist in (self.lines + self.patches + self.texts + self.tables
+                           + self.artists + self.images + self.collections
+                           + self.containers):
+                artist.remove()
+
         self.mouseover_set = set()
         self._current_image = None  # strictly for pyplot via _sci, _gci
         self.legend_ = None
-        self.collections = []  # collection.Collection instances
-        self.containers = []
 
         self.grid(False)  # Disable grid on init to use rcParameter
         self.grid(self._gridOn, which=rcParams['axes.grid.which'],
