@@ -12,22 +12,24 @@ cache:
 addons:
   apt:
     packages:
+      - cm-super
+      - dvipng
+      - gdb
+      - graphviz
       - inkscape
       - libav-tools
-      - gdb
-      - mencoder
-      - dvipng
-      - pgf
+      - libgeos-dev
       - lmodern
-      - cm-super
+      - mencoder
+      - otf-freefont
+      - pgf
+      - python3-gi
+      - python3-pyqt4
+      - texlive-fonts-recommended
       - texlive-latex-base
       - texlive-latex-extra
-      - texlive-fonts-recommended
       - texlive-latex-recommended
       - texlive-xetex
-      - graphviz
-      - libgeos-dev
-      - otf-freefont
 
 env:
   global:
@@ -138,6 +140,16 @@ install:
       python -c 'import wx' &&
       echo 'wxPython is available' ||
       echo 'wxPython is not available'
+    # Rely on vext to access system site packages.
+    export VEXT_DEBUG_LOG=1
+    pip install vext.pyqt4 &&
+      python -c 'import PyQt4.QtCore' &&
+      echo 'PyQt4 is available' ||
+      echo 'PyQt4 is not available'
+    pip install vext.gi &&
+      python -c 'import gi' &&
+      echo 'PyGObject is available' ||
+      echo 'PyGObject is not available'
 
     if [[ $BUILD_DOCS == true ]]; then
       pip install $PRE -r doc-requirements.txt
