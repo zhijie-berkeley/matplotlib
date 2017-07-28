@@ -35,7 +35,8 @@ class FigureCanvasQTAggBase(FigureCanvasAgg):
         super(FigureCanvasQTAggBase, self).__init__(figure=figure)
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)
         self._agg_draw_pending = False
-        self._bbox_queue = []
+        self._bbox_queue = []  # Only kept for backcompatibility, but unused.
+        self._erase_before_paint = False
         self._drawRect = None
 
     def drawRectangle(self, rect):
@@ -50,7 +51,7 @@ class FigureCanvasQTAggBase(FigureCanvasAgg):
     def blitbox(self):
         return self._bbox_queue
 
-    def paintEvent(self, e):
+    def paintEvent(self, event):
         """Copy the image from the Agg canvas to the qt.drawable.
 
         In Qt, all drawing should be done inside of here when a widget is
@@ -83,31 +84,32 @@ class FigureCanvasQTAggBase(FigureCanvasAgg):
         if not hasattr(self, 'renderer'):
             return
 
+        self._bbox_queue.clear()
         painter = QtGui.QPainter(self)
-
-        if self._bbox_queue:
-            bbox_queue = self._bbox_queue
-        else:
+        rect = event.rect()
+        left = rect.left()
+        top = rect.top()
+        width = rect.width()
+        height = rect.height()
+        if self._erase_before_paint:
             painter.eraseRect(self.rect())
-            bbox_queue = [
-                Bbox([[0, 0], [self.renderer.width, self.renderer.height]])]
-        self._bbox_queue = []
-        for bbox in bbox_queue:
-            l, b, r, t = map(int, bbox.extents)
-            w = r - l
-            h = t - b
-            reg = self.copy_from_bbox(bbox)
-            buf = reg.to_string_argb()
-            qimage = QtGui.QImage(buf, w, h, QtGui.QImage.Format_ARGB32)
-            if hasattr(qimage, 'setDevicePixelRatio'):
-                # Not available on Qt4 or some older Qt5.
-                qimage.setDevicePixelRatio(self._dpi_ratio)
-            origin = QtCore.QPoint(l, self.renderer.height - t)
-            painter.drawImage(origin / self._dpi_ratio, qimage)
-            # Adjust the buf reference count to work around a memory
-            # leak bug in QImage under PySide on Python 3.
-            if QT_API == 'PySide' and six.PY3:
-                ctypes.c_long.from_address(id(buf)).value = 1
+            self._erase_before_paint = False
+        # See documentation of QRect: bottom() and right() are off by 1, so use
+        # left() + width() and top() + height().
+        bbox = Bbox([[left, self.renderer.height - (top + height)],
+                     [left + width, self.renderer.height - top]])
+        reg = self.copy_from_bbox(bbox)
+        buf = reg.to_string_argb()
+        qimage = QtGui.QImage(buf, width, height, QtGui.QImage.Format_ARGB32)
+        if hasattr(qimage, 'setDevicePixelRatio'):
+            # Not available on Qt4 or some older Qt5.
+            qimage.setDevicePixelRatio(self._dpi_ratio)
+        origin = QtCore.QPoint(left, top)
+        painter.drawImage(origin / self._dpi_ratio, qimage)
+        # Adjust the buf reference count to work around a memory
+        # leak bug in QImage under PySide on Python 3.
+        if QT_API == 'PySide' and six.PY3:
+            ctypes.c_long.from_address(id(buf)).value = 1
 
         # draw the zoom rectangle to the QPainter
         if self._drawRect is not None:
@@ -125,6 +127,7 @@ class FigureCanvasQTAggBase(FigureCanvasAgg):
         # The Agg draw is done here; delaying causes problems with code that
         # uses the result of the draw() to update plot elements.
         super(FigureCanvasQTAggBase, self).draw()
+        self._erase_before_paint = True
         self.update()
 
     def draw_idle(self):
@@ -162,7 +165,7 @@ class FigureCanvasQTAggBase(FigureCanvasAgg):
         """
         # If bbox is None, blit the entire canvas. Otherwise
         # blit only the area defined by the bbox.
-        if bbox is None and self.figure:
+        if bbox is None:
             bbox = self.figure.bbox
 
         self._bbox_queue.append(bbox)
