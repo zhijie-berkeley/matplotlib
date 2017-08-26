@@ -486,7 +486,6 @@ class _AxesBase(martist.Artist):
         if self._position.width < 0 or self._position.height < 0:
             raise ValueError('Width and height specified must be non-negative')
         self._originalPosition = self._position.frozen()
-        # self.set_axes(self)
         self.axes = self
         self._aspect = 'auto'
         self._adjustable = 'box'
@@ -510,7 +509,7 @@ class _AxesBase(martist.Artist):
             facecolor = rcParams['axes.facecolor']
         self._facecolor = facecolor
         self._frameon = frameon
-        self._axisbelow = rcParams['axes.axisbelow']
+        self.set_axisbelow(rcParams['axes.axisbelow'])
 
         self._rasterization_zorder = None
 
@@ -2555,18 +2554,7 @@ class _AxesBase(martist.Artist):
             for spine in six.itervalues(self.spines):
                 artists.remove(spine)
 
-        if self.axison and not inframe:
-            if self._axisbelow is True:
-                self.xaxis.set_zorder(0.5)
-                self.yaxis.set_zorder(0.5)
-            elif self._axisbelow is False:
-                self.xaxis.set_zorder(2.5)
-                self.yaxis.set_zorder(2.5)
-            else:
-                # 'line': above patches, below lines
-                self.xaxis.set_zorder(1.5)
-                self.yaxis.set_zorder(1.5)
-        else:
+        if not self.axison or inframe:
             for _axis in self._get_axis_list():
                 artists.remove(_axis)
 
@@ -2637,9 +2625,7 @@ class _AxesBase(martist.Artist):
     # Axes rectangle characteristics
 
     def get_frame_on(self):
-        """
-        Get whether the axes rectangle patch is drawn.
-        """
+        """Get whether the axes rectangle patch is drawn."""
         return self._frameon
 
     def set_frame_on(self, b):
@@ -2651,6 +2637,8 @@ class _AxesBase(martist.Artist):
         Parameters
         ----------
         b : bool
+            ..
+                ACCEPTS: bool
         """
         self._frameon = b
         self.stale = True
@@ -2662,8 +2650,10 @@ class _AxesBase(martist.Artist):
         return self._axisbelow
 
     def set_axisbelow(self, b):
-        """
-        Set whether axis ticks and gridlines are above or below most artists.
+        """Set the zorder for the axes ticks and gridlines.
+
+        ``True`` corresponds to a zorder of 0.5, ``False`` to a zorder of 2.5,
+        and ``"line"`` to a zorder of 1.5.
 
         .. ACCEPTS: [ bool | 'line' ]
 
@@ -2671,7 +2661,17 @@ class _AxesBase(martist.Artist):
         ----------
         b : bool or 'line'
         """
-        self._axisbelow = validate_axisbelow(b)
+        self._axisbelow = axisbelow = validate_axisbelow(b)
+        if axisbelow is True:
+            zorder = 0.5
+        elif axisbelow is False:
+            zorder = 2.5
+        elif axisbelow == "line":
+            zorder = 1.5
+        else:
+            raise ValueError("Unexpected axisbelow value")
+        for axis in self._get_axis_list():
+            axis.set_zorder(zorder)
         self.stale = True
 
     @docstring.dedent_interpd
@@ -2699,6 +2699,8 @@ class _AxesBase(martist.Artist):
 
         %(Line2D)s
 
+        Note that the grid will be drawn according to the axes' zorder and not
+        its own.
         """
         if len(kwargs):
             b = True
