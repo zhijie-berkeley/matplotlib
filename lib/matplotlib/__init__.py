@@ -103,6 +103,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import six
+from six.moves import urllib, reload_module as reload
 
 from collections import MutableMapping
 import contextlib
@@ -119,17 +120,15 @@ import sys
 import tempfile
 import warnings
 
+import numpy
+
 # cbook must import matplotlib only within function
 # definitions, so it is safe to import from it here.
 from . import cbook
-from matplotlib.cbook import (
+from .cbook import (
     _backports, mplDeprecation, dedent, get_label, sanitize_sequence)
-from matplotlib.compat import subprocess
-from matplotlib.rcsetup import defaultParams, validate_backend, cycler
-
-import numpy
-from six.moves.urllib.request import urlopen
-from six.moves import reload_module as reload
+from .compat import subprocess
+from .rcsetup import defaultParams, validate_backend, cycler
 
 # Get the version from the _version.py versioneer file. For a git checkout,
 # this is computed based on the number of commits since the last tag.
@@ -905,22 +904,19 @@ def rc_params(fail_on_error=False):
 URL_REGEX = re.compile(r'http://|https://|ftp://|file://|file:\\')
 
 
-def is_url(filename):
+def _is_url(filename):
     """Return True if string is an http, ftp, or file URL path."""
     return URL_REGEX.match(filename) is not None
 
 
-def _url_lines(f):
-    # Compatibility for urlopen in python 3, which yields bytes.
-    for line in f:
-        yield line.decode('utf8')
+is_url = cbook.deprecated("2.1")(_is_url)
 
 
 @contextlib.contextmanager
 def _open_file_or_url(fname):
-    if is_url(fname):
-        f = urlopen(fname)
-        yield _url_lines(f)
+    if _is_url(fname):
+        f = urllib.request.urlopen(fname)
+        yield (line.decode("utf-8") for line in f)
         f.close()
     else:
         fname = os.path.expanduser(fname)
@@ -1183,16 +1179,14 @@ def rc_file_defaults():
 
 
 def rc_file(fname):
-    """
-    Update rc params from file.
+    """Update rc params from file.
     """
     rcParams.update(rc_params_from_file(fname))
 
 
 @contextlib.contextmanager
 def rc_context(rc=None, fname=None):
-    """
-    Return a context manager for managing rc settings.
+    """Return a context manager for managing rc settings.
 
     This allows one to do::
 
