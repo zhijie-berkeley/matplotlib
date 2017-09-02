@@ -1158,7 +1158,10 @@ def rc(group, **kwargs):
 
 
 def rcdefaults():
-    """Restore the rc params from Matplotlib's internal defaults.
+    """Restore the rc params from Matplotlib's internal default style.
+
+    Style-blacklisted rc params (defined in
+    `matplotlib.style.core.STYLE_BLACKLIST`) are not updated.
 
     See Also
     --------
@@ -1168,20 +1171,32 @@ def rcdefaults():
         Use a specific style file.  Call ``style.use('default')`` to restore
         the default style.
     """
+    from .style.core import STYLE_BLACKLIST
     rcParams.clear()
-    rcParams.update(rcParamsDefault)
+    rcParams.update({k: v for k, v in rcParamsDefault.items()
+                     if k not in STYLE_BLACKLIST})
 
 
 def rc_file_defaults():
     """Restore the rc params from the original rc file loaded by Matplotlib.
+
+    Style-blacklisted rc params (defined in
+    `matplotlib.style.core.STYLE_BLACKLIST`) are not updated.
     """
-    rcParams.update(rcParamsOrig)
+    from .style.core import STYLE_BLACKLIST
+    rcParams.update({k: v for k, v in rcParamsOrig.items()
+                     if k not in STYLE_BLACKLIST})
 
 
 def rc_file(fname):
     """Update rc params from file.
+
+    Style-blacklisted rc params (defined in
+    `matplotlib.style.core.STYLE_BLACKLIST`) are not updated.
     """
-    rcParams.update(rc_params_from_file(fname))
+    from .style.core import STYLE_BLACKLIST
+    rcParams.update({k: v for k, v in rc_params_from_file(fname).items()
+                     if k not in STYLE_BLACKLIST})
 
 
 @contextlib.contextmanager
