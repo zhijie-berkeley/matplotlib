@@ -11,9 +11,6 @@ set -ev
 # Travis VM to run out of memory (since so many copies of inkscape and
 # ghostscript are running at the same time).
 
-if [[ $DELETE_FONT_CACHE == 1 ]]; then
-  rm -rf ~/.cache/matplotlib
-fi
 # Workaround for pytest-xdist flaky collection order
 # https://github.com/pytest-dev/pytest/issues/920
 # https://github.com/pytest-dev/pytest/issues/1075
@@ -22,7 +19,7 @@ echo PYTHONHASHSEED=$PYTHONHASHSEED
 
 echo The following args are passed to pytest $PYTEST_ARGS $RUN_PEP8
 if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
-  pytest $PYTEST_ARGS $RUN_PEP8
+  DYLD_FORCE_FLAT_NAMESPACE=1 pytest $PYTEST_ARGS $RUN_PEP8
 else
   gdb -return-child-result -batch -ex r -ex bt --args python $PYTHON_ARGS -m pytest $PYTEST_ARGS $RUN_PEP8
 fi

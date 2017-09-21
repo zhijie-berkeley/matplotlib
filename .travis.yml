@@ -139,12 +139,17 @@ install:
         pytest-timeout \
         pytest-xdist \
         $INSTALL_PEP8
-
-    # Use the special local version of freetype for testing
-    cp ci/travis/setup.cfg .
   - |
     # Install matplotlib
     pip install -ve .
+  - |
+    # Delete font cache, if needed.  This must come before we build freetype.
+    if [[ $DELETE_FONT_CACHE == 1 ]]; then
+      rm -rf ~/.cache/matplotlib
+    fi
+  - |
+    # Build freetype for tests.
+    python tools/build_freetype_261.py
 
 before_script:
   - |

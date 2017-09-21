@@ -1791,10 +1791,6 @@ PyMODINIT_FUNC initft2font(void)
         }
     }
 
-    if (PyModule_AddStringConstant(m, "__freetype_build_type__", STRINGIFY(FREETYPE_BUILD_TYPE))) {
-        INITERROR;
-    }
-
     import_array();
 
 #if PY3K

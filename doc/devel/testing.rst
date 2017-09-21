@@ -35,25 +35,19 @@ Optionally you can install:
   - pytest-xdist_ to run tests in parallel
 
 
-Building matplotlib for image comparison tests
+Building Matplotlib for image comparison tests
 ----------------------------------------------
 
-matplotlib's test suite makes heavy use of image comparison tests,
-meaning the result of a plot is compared against a known good result.
-Unfortunately, different versions of FreeType produce differently
-formed characters, causing these image comparisons to fail.  To make
-them reproducible, matplotlib can be built with a special local copy
-of FreeType.  This is recommended for all matplotlib developers.
+Matplotlib's test suite makes heavy use of image comparison tests, meaning
+the result of a plot is compared against a known good result.  Unfortunately,
+different versions of FreeType produce differently formed characters, causing
+these image comparisons to fail.  To make them reproducible, Matplotlib can
+load a specific version of FreeType (2.6.1), overriding the system version.
 
-Add the following content to a ``setup.cfg`` file at the root of the
-matplotlib source directory::
-
-  [test]
-  local_freetype = True
-  tests = True
-
-or by setting the ``MPLLOCALFREETYPE`` environmental variable to any true
-value.
+All Matplotlib developers should build this version of FreeType by running
+``tools/build_freetype_261.py``.  Additionally, on OSX, the environment
+variable ``DYLD_FORCE_FLAT_NAMESPACE`` should be set when running the tests
+(so that the override actually happens).
 
 Running the tests
 -----------------

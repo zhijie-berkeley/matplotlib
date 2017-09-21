@@ -1354,25 +1354,25 @@ def _init_tests():
     else:
         faulthandler.enable()
 
-    # The version of FreeType to install locally for running the
-    # tests.  This must match the value in `setupext.py`
-    LOCAL_FREETYPE_VERSION = '2.6.1'
-
-    from matplotlib import ft2font
-    if (ft2font.__freetype_version__ != LOCAL_FREETYPE_VERSION or
-        ft2font.__freetype_build_type__ != 'local'):
+    from ctypes import CDLL, RTLD_GLOBAL
+    if sys.platform.startswith("linux"):
+        freetype_path = os.path.join(get_cachedir(), "libfreetype.so")
+    elif sys.platform == "darwin":
+        freetype_path = os.path.join(get_cachedir(), "libfreetype.dylib")
+    elif sys.platform == "win32":
+        freetype_path = os.path.join(get_cachedir(), "freetype.dll")
+        if six.PY2:
+            freetype_path = freetype_path.encode(sys.getfilesystemencoding())
+    else:
+        raise ValueError("Unknown platform")
+    try:
+        CDLL(freetype_path, RTLD_GLOBAL)
+    except OSError as exc:
         warnings.warn(
-            "Matplotlib is not built with the correct FreeType version to run "
-            "tests.  Set local_freetype=True in setup.cfg and rebuild. "
-            "Expect many image comparison failures below. "
-            "Expected freetype version {0}. "
-            "Found freetype version {1}. "
-            "Freetype build type is {2}local".format(
-                LOCAL_FREETYPE_VERSION,
-                ft2font.__freetype_version__,
-                "" if ft2font.__freetype_build_type__ == 'local' else "not "
-            )
-        )
+            'Failed to load local freetype from {} ({}); expect many image '
+            'comparison failures.  You may build a local freetype using '
+            '"tools/build_freetype_261.py" from a source checkout.'
+            .format(freetype_path, exc))
 
     try:
         import pytest
@@ -1387,8 +1387,7 @@ def _init_tests():
 
 def test(verbosity=None, coverage=False, switch_backend_warn=True,
          recursionlimit=0, **kwargs):
-    """run the matplotlib test suite"""
-    _init_tests()
+    """Run the matplotlib test suite."""
     if not os.path.isdir(os.path.join(os.path.dirname(__file__), 'tests')):
         raise ImportError("Matplotlib test data is not installed")
 
@@ -1398,7 +1397,6 @@ def test(verbosity=None, coverage=False, switch_backend_warn=True,
         use('agg')
         if recursionlimit:
             sys.setrecursionlimit(recursionlimit)
-        import pytest
 
         args = kwargs.pop('argv', [])
         provide_default_modules = True
@@ -1423,14 +1421,13 @@ def test(verbosity=None, coverage=False, switch_backend_warn=True,
         if verbosity:
             args += ['-' + 'v' * verbosity]
 
-        retcode = pytest.main(args, **kwargs)
+        import pytest
+        return pytest.main(args, **kwargs)
     finally:
         if old_backend.lower() != 'agg':
             use(old_backend, warn=switch_backend_warn)
         if recursionlimit:
             sys.setrecursionlimit(old_recursionlimit)
-
-    return retcode
 
 
 test.__test__ = False  # pytest: this function is not a test
