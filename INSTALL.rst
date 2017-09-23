@@ -340,10 +340,6 @@ without fiddling with environment variables::
   copy %LIBRARY_LIB%\zlibstatic.lib lib\z.lib
   copy %LIBRARY_LIB%\libpng_static.lib lib\png.lib
 
-  # Make the header files and the rest of the static libs available during the build
-  # CONDA_DEFAULT_ENV is a env variable which is set to the currently active environment path
-  set MPLBASEDIRLIST=%CONDA_DEFAULT_ENV%\Library\;.
-
   # build the wheel
   python setup.py bdist_wheel
 
