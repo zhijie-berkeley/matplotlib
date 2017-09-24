@@ -24,6 +24,25 @@ from setuptools import Extension
 import _setupext_backports as _backports
 
 
+class SetupExtError(Exception):
+    """Base class for exceptions that should be caught and handled."""
+
+
+class SetupCfgError(SetupExtError):
+    """Exception thrown for invalid entries in setup.cfg."""
+
+
+class PkgConfigError(SetupExtError):
+    """Exception thrown when pkg-config fails to find a dependency."""
+
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return ("Could not find headers for {}.  Try installing with conda or "
+                "your distribution's package manager.".format(self.name))
+
+
 def _load_setup_cfg():
     options = {
         "backend": None,
@@ -51,7 +70,7 @@ log = print if OPTIONS["display_status"] else lambda *args, **kwargs: None
 
 
 def get_config(category, name, default):
-    """Return the configuration set in setup.cfg ("auto", True, False).
+    """Return the boolean configuration set in setup.cfg ("auto", True, False).
     """
     if not _CONFIG.has_option(category, name):
         return default
@@ -62,6 +81,23 @@ def get_config(category, name, default):
             return default
         else:
             raise
+
+
+def get_enum_config(category, name, choices):
+    """Return the configuration set in setup.cfg.
+
+    It must be one of the values listed in choices, and defaults to the first
+    value if not set.  Otherwise, a ValueError is raised.
+    """
+    if _CONFIG.has_option(category, name):
+        value = _CONFIG.get(category, name)
+        if value in choices:
+            return value
+        else:
+            raise SetupCfgError(
+                "Invalid setup.cfg entry: {}.{} should be one of {}".format())
+    else:
+        return choices[0]
 
 
 if sys.platform == "win32":
@@ -83,8 +119,7 @@ class Package(object):
     # If the dependency is optional and will, in fact, not be built, unset the
     # `.built` attribute (in that case, the subsequent attributes will not be
     # used).  Compulsory dependencies which cannot be built should instead
-    # throw a suitable exception -- currently of the class PkgConfigError -- if
-    # they cannot be built.
+    # throw a PkgConfigError if they cannot be built.
     built = True
 
     # If the dependency provides a backend, set the `.provides_backend`
@@ -146,19 +181,10 @@ def with_dependencies(ext, deps):
     for dep in deps:
         try:
             dep.add_flags(ext)
-        except PkgConfigError as exc:
-            sys.exit("Could not find headers for {}.  Try installing with "
-                     "conda or your distribution's package manager."
-                     .format(exc.name))
+        except SetupExtError as exc:
+            sys.exit(str(exc))
     ext.include_dirs.append(".")
     return ext
-
-
-class PkgConfigError(Exception):
-    """Exception thrown when pkg-config fails to find a dependency.
-    """
-    def __init__(self, name):
-        self.name = name
 
 
 class _PkgConfig(object):
@@ -185,8 +211,8 @@ class _PkgConfig(object):
             self._executable = None
         self._header_cache = {}
 
-    def add_flags(self, ext, name, min_version=None,
-                  alt_exec=None, alt_header=None):
+    def add_flags(self, ext, name, min_version=None, alt_exec=None,
+                  fallback_header=None, fallback_name=None):
         """Add pkg-config flags to an `Extension`.
 
         Parameters
@@ -201,11 +227,15 @@ class _PkgConfig(object):
         alt_version : str, optional
             If set, a pkg-config-like executable which will be called instead
             of pkg-config if it exists.
-        alt_header : str, optional
+        fallback_header : str, optional
             If set, path to a header file; if the header file is found by the
             compiler when building an otherwise empty extension module, the
             dependency is considered satisfied even if there is no pkg-config
             information available.
+        fallback_name : str, optional
+            If the library was found via *fallback_header*, the library name is
+            set to *fallback_name* if it is set; otherwise, the pkg-config name
+            is used.
         """
         try:
             if alt_exec is not None and _backports.which(alt_exec):
@@ -225,15 +255,17 @@ class _PkgConfig(object):
                             universal_newlines=True, stderr=devnull))
                 version, = get_output("--modversion")
             else:
-                return self._check_alt_header(ext, name, alt_header)
+                return self._check_fallback_header(
+                    ext, name, fallback_header, fallback_name)
             if min_version is not None and LooseVersion(version) < min_version:
                 raise PkgConfigError(name)
             ext.extra_compile_args.extend(get_output("--cflags"))
             ext.extra_link_args.extend(get_output("--libs"))
         except subprocess.CalledProcessError:
-            return self._check_alt_header(ext, name, alt_header)
+            return self._check_fallback_header(
+                ext, name, fallback_header, fallback_name)
 
-    def _check_alt_header(self, ext, name, header):
+    def _check_fallback_header(self, ext, name, header, fallback_name):
         if header is None:
             raise PkgConfigError(name)
         if header not in self._header_cache:
@@ -263,7 +295,7 @@ class _PkgConfig(object):
                 if tmpdir is not None:
                     shutil.rmtree(tmpdir)
         if self._header_cache[header]:
-            ext.libraries.append(name)
+            ext.libraries.append(fallback_name or name)
         else:
             raise PkgConfigError(name)
 
@@ -340,7 +372,7 @@ class FreeType(Package):
             "freetype" if sys.platform == "win32" else "freetype2",
             min_version="9.11.3",
             alt_exec="freetype-config",
-            alt_header="ft2build.h" if sys.platform == "win32"
+            fallback_header="ft2build.h" if sys.platform == "win32"
                        else "freetype2/ft2build.h")
 
 
@@ -349,7 +381,7 @@ class Gtk(Package):
     def add_flags(cls, ext):
         try:
             pkg_config.add_flags(ext, "pygtk-2.0", min_version="2.2.0",
-                                 alt_header="pygtk/pygtk.h")
+                                 fallback_header="pygtk/pygtk.h")
         except PkgConfigError:
             if sys.platform == "win32":
                 ext.library_dirs.extend(["C:/GTK/bin", "C:/GTK/lib"])
@@ -395,8 +427,16 @@ class LibAgg(Package):
 class LibPng(Package):
     @staticmethod
     def add_flags(ext):
-        pkg_config.add_flags(ext, "libpng", min_version="1.2",
-                             alt_exec="libpng-config", alt_header="png.h")
+        if (sys.platform == "win32"
+                and get_enum_config("windows", "build_type",
+                                    ["static", "dynamic", "dynamic_with_dlls"])
+                    == "static"):
+            ext.libraries.append("libpng_static")
+            ext.libraries.append("zlibstatic")
+        else:
+            pkg_config.add_flags(ext, "libpng", min_version="1.2",
+                                 alt_exec="libpng-config",
+                                 fallback_header="png.h", fallback_name="png")
 
 
 class Qhull(Package):
@@ -404,7 +444,7 @@ class Qhull(Package):
     def add_flags(ext):
         try:
             pkg_config.add_flags(ext, "libqhull", min_version="2015.2",
-                                 alt_header="libqhull/qhull_a.h")
+                                 fallback_header="libqhull/qhull_a.h")
         except PkgConfigError:
             ext.include_dirs.append("extern")
             ext.sources.extend(sorted(glob.glob("extern/libqhull/*.c")))
@@ -531,9 +571,11 @@ class ToolkitsTests(Package):
 
 
 class Dlls(Package):
-    built = get_config("package_data", "dlls", False)
-    if built and sys.platform != "win32":
-        raise ValueError("'dlls' is Windows-only")
+    # FIXME Needs to be actually implemented...
+    built = (sys.platform == "win32"
+             and get_enum_config("windows", "build_type",
+                                 ["static", "dynamic", "dynamic_with_dlls"])
+             == "dynamic_with_dlls")
     package_data = {"": ["*.dll"]}
 
 

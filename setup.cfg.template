@@ -1,17 +1,11 @@
 # Rename this file to setup.cfg to modify Matplotlib's
 # build options.
 
-[egg_info]
-
-[directories]
-# Uncomment to override the default basedir in setupext.py.
-# This can be a single directory or a comma-delimited list of directories.
-#basedirlist = /usr
-
 [status]
 # To suppress display of the dependencies and their versions
-# at the top of the build log, uncomment the following line:
-#suppress = True 
+# at the top of the build log, set suppress to True.
+#
+#suppress = False
 
 [packages]
 # There are a number of subpackages of Matplotlib that are considered
@@ -68,7 +62,7 @@
 #wxagg = auto
 
 [rc_options]
-# User-configurable options
+# User-configurable options.
 #
 # Default backend, one of: Agg, Cairo, GTK, GTKAgg, GTKCairo,
 # GTK3Agg, GTK3Cairo, MacOSX, Pdf, Ps, Qt4Agg, Qt5Agg, SVG, TkAgg, WX, WXAgg.
@@ -79,10 +73,10 @@
 # by default.
 #
 #backend = Agg
-#
 
-[package_data]
-# Package additional files found in the lib/matplotlib directories.
+[windows]
+# On Windows, third-party binary dependencies can be linked statically
+# ("static") or dynamically ("dynamic"); in the latter case, the DLLs can be
+# installed next to the package ("dynamic_with_dlls").
 #
-# On Windows, package DLL files.
-#dlls = True
+#build_type = static
