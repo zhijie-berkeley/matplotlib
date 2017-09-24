@@ -8,6 +8,7 @@ import glob
 import os
 import shlex
 import shutil
+from string import Template
 import subprocess
 import sys
 import sysconfig
@@ -158,6 +159,25 @@ class Package(object):
         setup_kwargs["ext_modules"].extend(cls.ext_modules)
         for key, value in cls.package_data.items():
             setup_kwargs["package_data"].setdefault(key, []).extend(value)
+
+
+def process_packages(packages, setup_kwargs):
+    max_len = max(len(pkg.__name__) for pkg in packages)
+    default_backend = "agg"
+    for pkg in packages:
+        log("{:>{}}: {}".format(pkg.__name__, max_len,
+                                {True: "yes", False: "no"}[pkg.built]))
+        pkg.register(setup_kwargs)
+        if pkg.built and pkg.provides_backend:
+            default_backend = pkg.provides_backend
+    if OPTIONS["backend"] is not None:
+        default_backend = OPTIONS["backend"]
+    with open("matplotlibrc.template") as file:
+        template = file.read()
+    template = Template(template)
+    with open("lib/matplotlib/mpl-data/matplotlibrc", "w") as file:
+        file.write(template.safe_substitute(TEMPLATE_BACKEND=default_backend))
+    return setup_kwargs
 
 
 class delayed_str(object):

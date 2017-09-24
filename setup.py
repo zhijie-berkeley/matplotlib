@@ -9,7 +9,6 @@ variable.  See setup.cfg.template for more information.
 from __future__ import print_function, absolute_import
 
 from distutils.version import LooseVersion
-from string import Template
 import sys
 
 if sys.version_info < (2, 7):
@@ -29,44 +28,6 @@ if LooseVersion(setuptools.__version__) < _setuptools_min_version:
              .format(_setuptools_min_version, setuptools.__version__))
 
 import versioneer
-
-import _setupext
-from _setupext import OPTIONS
-
-
-mpl_packages = [
-    _setupext.Matplotlib,
-    # install_requires.
-    _setupext.Numpy,
-    _setupext.PurePythonRequires,
-    # Extension modules.
-    _setupext.Contour,
-    _setupext.FT2Font,
-    _setupext.Image,
-    _setupext.Path,
-    _setupext.Png,
-    _setupext.QhullWrap,
-    _setupext.TTConv,
-    _setupext.Tri,
-    # Optional packages.
-    _setupext.SampleData,
-    _setupext.Toolkits,
-    _setupext.Tests,
-    _setupext.ToolkitsTests,
-    _setupext.Dlls,
-    # Backends, from least to most preferred.
-    _setupext.BackendCairo,
-    _setupext.BackendAgg,
-    _setupext.BackendGtk,
-    _setupext.BackendWxAgg,
-    _setupext.BackendTkAgg,
-    _setupext.BackendGtkAgg,
-    _setupext.BackendGtk3Cairo,
-    _setupext.BackendGtk3Agg,
-    _setupext.BackendQt4Agg,
-    _setupext.BackendQt5Agg,
-    _setupext.BackendMacOSX,
-]
 
 
 setup_kwargs = dict(
@@ -109,25 +70,45 @@ setup_kwargs = dict(
     package_data={},
 )
 
+if set(sys.argv[1:]) & {
+        "bdist_wheel", "build", "build_ext", "build_py", "develop", "egg_info",
+        "install", "sdist"}:
+    # _setupext does a lot of work at import time, so delay the import until it
+    # is necessary.
+    import _setupext
+    mpl_packages = [
+        _setupext.Matplotlib,
+        # install_requires.
+        _setupext.Numpy,
+        _setupext.PurePythonRequires,
+        # Extension modules.
+        _setupext.Contour,
+        _setupext.FT2Font,
+        _setupext.Image,
+        _setupext.Path,
+        _setupext.Png,
+        _setupext.QhullWrap,
+        _setupext.TTConv,
+        _setupext.Tri,
+        # Optional packages.
+        _setupext.SampleData,
+        _setupext.Toolkits,
+        _setupext.Tests,
+        _setupext.ToolkitsTests,
+        _setupext.Dlls,
+        # Backends, from least to most preferred.
+        _setupext.BackendCairo,
+        _setupext.BackendAgg,
+        _setupext.BackendGtk,
+        _setupext.BackendWxAgg,
+        _setupext.BackendTkAgg,
+        _setupext.BackendGtkAgg,
+        _setupext.BackendGtk3Cairo,
+        _setupext.BackendGtk3Agg,
+        _setupext.BackendQt4Agg,
+        _setupext.BackendQt5Agg,
+        _setupext.BackendMacOSX,
+    ]
+    setup_kwargs = _setupext.process_packages(mpl_packages, setup_kwargs)
 
-def _process_packages():
-    max_len = max(len(pkg.__name__) for pkg in mpl_packages)
-    default_backend = "agg"
-    for pkg in mpl_packages:
-        _setupext.log("{:>{}}: {}".format(
-            pkg.__name__, max_len,
-            {True: "yes", False: "no"}[pkg.built]))
-        pkg.register(setup_kwargs)
-        if pkg.built and pkg.provides_backend:
-            default_backend = pkg.provides_backend
-    if OPTIONS["backend"] is not None:
-        default_backend = options["backend"]
-    with open("matplotlibrc.template") as file:
-        template = file.read()
-    template = Template(template)
-    with open("lib/matplotlib/mpl-data/matplotlibrc", "w") as file:
-        file.write(template.safe_substitute(TEMPLATE_BACKEND=default_backend))
-
-
-_process_packages()
 setuptools.setup(**setup_kwargs)
