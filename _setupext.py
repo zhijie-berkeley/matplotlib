@@ -292,15 +292,7 @@ class Matplotlib(Package):
     }
 
 
-# Unconditional install_requires.
-
-class Cycler(Package):
-    install_requires = ["cycler>=0.10"]
-
-
-class Dateutil(Package):
-    install_requires = ["python-dateutil>=2.0"]
-
+# install_requires.
 
 class Numpy(Package):
     install_requires = ["numpy>=1.7.1"]
@@ -323,26 +315,15 @@ class Numpy(Package):
         ext.define_macros.append(("__STDC_FORMAT_MACROS", 1))
 
 
-class Pyparsing(Package):
-    install_requires = ["pyparsing>=2.0.1,!=2.0.4,!=2.1.2,!=2.1.6"]
-
-
-class Pytz(Package):
-    install_requires = ["pytz"]
-
-
-class Six(Package):
-    install_requires = ["six>=1.10"]
-
-
-# Conditional requirements.
-
-class BackportsFunctoolsLRUCache(Package):
-    extras_require = {":python_version<'3'": ["backports.functools_lru_cache"]}
-
-
-class Subprocess32(Package):
+class PurePythonRequires(Package):
+    install_requires = [
+        "cycler>=0.10",
+        "python-dateutil>=2.0",
+        "pyparsing>=2.0.1,!=2.0.4,!=2.1.2,!=2.1.6",
+        "pytz",
+        "six>=1.10"]
     extras_require = {
+        ":python_version<'3'": ["backports.functools_lru_cache"],
         ":python_version<'3' and os_name=='posix'": ["subprocess32"]}
 
 

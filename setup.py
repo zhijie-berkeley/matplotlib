@@ -36,16 +36,9 @@ from _setupext import OPTIONS
 
 mpl_packages = [
     _setupext.Matplotlib,
-    # Unconditional install_requires.
-    _setupext.Cycler,
-    _setupext.Dateutil,
+    # install_requires.
     _setupext.Numpy,
-    _setupext.Pyparsing,
-    _setupext.Pytz,
-    _setupext.Six,
-    # Conditional requirements.
-    _setupext.BackportsFunctoolsLRUCache,
-    _setupext.Subprocess32,
+    _setupext.PurePythonRequires,
     # Extension modules.
     _setupext.Contour,
     _setupext.FT2Font,
