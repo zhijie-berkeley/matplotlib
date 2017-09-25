@@ -10,9 +10,8 @@ Installing
 
 .. note::
 
-    If you wish to contribute to the project, it's recommended you
-    :ref:`install the latest development version<install_from_source>`.
-
+   If you wish to contribute to the project, it's recommended you
+   :ref:`install the latest development version<install_from_source>`.
 
 .. contents::
 
@@ -65,7 +64,6 @@ so that *subprocess32*, a dependency, may be compiled.
 To use the native OSX backend you will need :ref:`a framework build
 <osxframework-faq>` build of Python.
 
-
 Linux
 -----
 
@@ -73,8 +71,7 @@ On extremely old versions of Linux and Python 2.7 you may need to
 install the master version of *subprocess32* (`see comments
 <https://github.com/google/python-subprocess32/issues/12#issuecomment-304724113>`__).
 
-
-Test Data
+Test data
 ---------
 
 The wheels (:file:`*.whl`) on the `PyPI download page
@@ -93,7 +90,6 @@ To run the test suite:
    <https://inkscape.org/>`_;
  * run ``py.test path\to\tests\directory``.
 
-
 Third-party distributions of Matplotlib
 =======================================
 
@@ -109,7 +105,6 @@ Linux platforms. `WinPython <https://winpython.github.io/>`__ is an
 option for windows users.  All of these distributions include
 Matplotlib and *lots* of other useful tools.
 
-
 Linux : using your package manager
 ----------------------------------
 
@@ -120,8 +115,6 @@ is packaged for almost every major Linux distribution.
 * Fedora: ``sudo dnf install python3-matplotlib``
 * Red Hat: ``sudo yum install python3-matplotlib``
 * Arch: ``sudo pacman -S python-matplotlib``
-
-
 
 .. _install_from_source:
 
@@ -190,7 +183,6 @@ Matplotlib requires a large number of dependencies:
   * `subprocess32 <https://pypi.python.org/pypi/subprocess32/>`_ (for Python
     2.7 only, on Linux and macOS only)
 
-
 Optionally, you can also install a number of packages to enable better user
 interface toolkits. See :ref:`what-is-a-backend` for more details on the
 optional Matplotlib backends and the capabilities they provide.
@@ -257,7 +249,6 @@ Matplotlib by first installing ``yum-builddep`` and then running::
 These commands do not build Matplotlib, but instead get and install the
 build dependencies, which will make building from source easier.
 
-
 .. _build_osx:
 
 Building on macOS
@@ -289,21 +280,19 @@ found that, to run the tests, their PYTHONPATH must include
 /path/to/anaconda/.../site-packages and their DYLD_FALLBACK_LIBRARY_PATH
 must include /path/to/anaconda/lib.
 
-
 .. _build_windows:
 
 Building on Windows
 -------------------
 
 The Python shipped from https://www.python.org is compiled with Visual Studio
-2008 for versions before 3.3, Visual Studio 2010 for 3.3 and 3.4, and
-Visual Studio 2015 for 3.5 and 3.6.  Python extensions are recommended to be compiled
-with the same compiler.
+2008 for versions before 3.3, Visual Studio 2010 for 3.3 and 3.4, and Visual
+Studio 2015 for 3.5 and 3.6.  Python extensions should be compiled with the
+same compiler.
 
 Since there is no canonical Windows package manager, the methods for building
 FreeType, zlib, and libpng from source code are documented as a build script
 at `matplotlib-winbuild <https://github.com/jbmohler/matplotlib-winbuild>`_.
-
 
 There are a few possibilities to build Matplotlib on Windows:
 
@@ -311,58 +300,50 @@ There are a few possibilities to build Matplotlib on Windows:
 * Wheels by using conda packages
 * Conda packages
 
+In any case, you need to be able to compile a native Python lib for the Python
+version of your choice. See `here <windows-howto>`_ for how to install and
+setup such environments.  If in doubt, use Python>=3.5 as it mostly works
+without fiddling with environment variables.
+
+.. _windows-howto: https://blog.ionelmc.ro/2014/12/21/compiling-python-extensions-on-windows/
+
 Wheel builds using conda packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is a wheel build, but we use conda packages to get all the requirements. The binary
-requirements (png, FreeType,...) are statically linked and therefore not needed during the wheel
-install.
+This is a wheel build, but we use conda packages to get all the requirements.
 
-The commands below assume that you can compile a native Python lib for the Python version of your
-choice. See `this howto <https://blog.ionelmc.ro/2014/12/21/compiling-python-extensions-on-windows/>`_
-for how to install and setup such environments. If in doubt: use Python >= 3.5 as it mostly works
-without fiddling with environment variables::
+By default, libpng and zlib are statically linked (adjustable in
+:file:`setup.cfg`) and thus not needed when installing the wheel.  However,
+:file:`freetype.lib` can be either a static library (e.g., the one distributed
+by Anaconda) or a dynamic one (e.g., the one distributed by conda-forge).  This
+can be checked by running ``lib /link \path\to\freetype.lib``.  We link against
+whatever :file:`freetype.lib` the linker finds, so make sure to install the
+correct one!
 
-  # create a new environment with the required packages
-  conda create  -n "matplotlib_build" python=3.5 numpy python-dateutil pyparsing pytz tornado "cycler>=0.10" tk libpng zlib freetype
-  activate matplotlib_build
-  # if you want a qt backend, you also have to install pyqt (be aware that pyqt doesn't mix well if
-  # you have created the environment with conda-forge already activated...)
-  conda install pyqt
-  # this package is only available in the conda-forge channel
-  conda install -c conda-forge msinttypes
-  # for Python 2.7
-  conda install -c conda-forge backports.functools_lru_cache
-
-  # copy the libs which have "wrong" names
-  set LIBRARY_LIB=%CONDA_DEFAULT_ENV%\Library\lib
-  mkdir lib || cmd /c "exit /b 0"
-  copy %LIBRARY_LIB%\zlibstatic.lib lib\z.lib
-  copy %LIBRARY_LIB%\libpng_static.lib lib\png.lib
-
-  # build the wheel
-  python setup.py bdist_wheel
-
-The `build_alllocal.cmd` script in the root folder automates these steps if
-you have already created and activated the conda environment.
-
+.. code-block:: batch
+   :: Create a new environment with the required packages
+   conda create -n matplotlib-build python=3.6 numpy tk freetype libpng zlib
+   activate matplotlib-build
+   :: If you want a Qt backend, you also have to install PyQt (be aware that
+   :: PyQt doesn't mix well if you have created the environment with conda-forge
+   :: already activated...).
+   conda install pyqt
+   :: This package is only available in the conda-forge channel.
+   conda install -c conda-forge msinttypes
+   :: Build the wheel.
+   python setup.py bdist_wheel
 
 Conda packages
 ^^^^^^^^^^^^^^
 
-This needs a `working installed C compiler
-<https://blog.ionelmc.ro/2014/12/21/compiling-python-extensions-on-windows/>`_
-for the version of Python you are compiling the package for but you don't need
-to setup the environment variables::
+A recipe for ``conda-build`` is provided and can be used as follows:
 
-  # only the first time...
-  conda install conda-build
-
-  # the Python version you want a package for...
-  set CONDA_PY=3.5
-
-  # builds the package, using a clean build environment
-  conda build ci\conda_recipe
-
-  # install the new package
-  conda install --use-local matplotlib
+.. code-block:: batch
+   :: Only the first time.
+   conda install conda-build
+   :: The Python version you want a package for:
+   set CONDA_PY=3.6
+   :: Builds the package, using a clean build environment.
+   conda build ci\conda_recipe
+   :: Install the new package.
+   conda install --use-local matplotlib
