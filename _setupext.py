@@ -451,8 +451,8 @@ class LibPng(Package):
     @staticmethod
     def add_flags(ext):
         if (sys.platform == "win32"
-                and get_enum_config("windows", "build_type",
-                                    ["static", "dynamic", "dynamic_with_dlls"])
+                and get_enum_config("windows", "libpng",
+                                    ["static", "dynamic"])
                     == "static"):
             ext.libraries.append("libpng_static")
             ext.libraries.append("zlibstatic")
@@ -595,10 +595,7 @@ class ToolkitsTests(Package):
 
 class Dlls(Package):
     # FIXME Needs to be actually implemented...
-    built = (sys.platform == "win32"
-             and get_enum_config("windows", "build_type",
-                                 ["static", "dynamic", "dynamic_with_dlls"])
-             == "dynamic_with_dlls")
+    built = False
     package_data = {"": ["*.dll"]}
 
 

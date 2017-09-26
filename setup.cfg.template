@@ -75,8 +75,12 @@
 #backend = Agg
 
 [windows]
-# On Windows, third-party binary dependencies can be linked statically
-# ("static") or dynamically ("dynamic"); in the latter case, the DLLs can be
-# installed next to the package ("dynamic_with_dlls").
+# On Windows, libpng (and its dependency, zlib) can be linked statically
+# ("static", the default -- linking to libpng_static.lib and zlibstatic.lib)
+# or dynamically ("dynamic" -- linking to libpng.lib and zlib.lib).  Note that
+# this does not apply to freetype, as freetype.lib can be either a static or
+# a dynamic library (at the time of writing, anaconda distributes a static
+# library and conda-forge a dynamic one; instead, linking is done against
+# whatever freetype.lib the compiler finds.
 #
-#build_type = static
+#libpng = static
