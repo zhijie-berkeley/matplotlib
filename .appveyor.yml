@@ -56,6 +56,7 @@ cache:
 
 init:
   - echo %PYTHON_VERSION% %CONDA_INSTALL_LOCN%
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 install:
   - set PATH=%CONDA_INSTALL_LOCN%;%CONDA_INSTALL_LOCN%\scripts;%PATH%;
@@ -158,6 +159,7 @@ artifacts:
     type: zip
 
 on_finish:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 on_failure:
   - python tools/visualize_tests.py --no-browser
