@@ -61,14 +61,14 @@ install:
   - set PATH=%CONDA_INSTALL_LOCN%;%CONDA_INSTALL_LOCN%\scripts;%PATH%;
   - set PYTHONUNBUFFERED=1
   - conda update --all --yes
-  - conda install anaconda-client=1.6.3 --yes
-  - conda install -c conda-forge --yes obvious-ci
+  # - conda install anaconda-client=1.6.3 --yes
+  # - conda install -c conda-forge --yes obvious-ci
   # for msinttypes and newer stuff
   - conda config --prepend channels conda-forge
   - conda config --set show_channel_urls yes
   - conda config --set always_yes true
   # For building conda packages
-  - conda install --yes conda-build jinja2 anaconda-client
+  - conda install --yes conda-build anaconda-client
   # this is now the downloaded conda...
   - conda info -a
 
