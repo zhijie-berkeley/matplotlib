@@ -106,11 +106,14 @@ if sys.platform == "win32":
     if conda_prefix:
         if "CL" not in os.environ:
             os.environ["CL"] = ""
-        os.environ["CL"] += ' "/I{}\\Library\\include"'.format(conda_prefix)
+        os.environ["CL"] += ' /I"{}" /I"{}"'.format(
+            os.path.join(conda_prefix, "Library", "include"),
+            # A bit hackish, but seems easier than adding more logic...
+            os.path.join(conda_prefix, "Library", "include", "freetype2"))
         if "LINK" not in os.environ:
             os.environ["LINK"] = ""
-        os.environ["LINK"] += (
-            ' "/LIBPATH:{}\\Library\\lib"'.format(conda_prefix))
+        os.environ["LINK"] += ' /LIBPATH:"{}"'.format(
+            os.path.join(conda_prefix, "Library", "lib"))
 
 
 class Package(object):
@@ -387,13 +390,13 @@ class FreeType(Package):
         # Note: 9.11.3 is the pkg-config version corresponding to freetype
         # 2.3.0.  The former can be read from builds/unix/configure.raw in
         # the freetype2 source tree.
+        # See also the setting of include paths above for Windows + conda.
         pkg_config.add_flags(
             ext,
             "freetype" if sys.platform == "win32" else "freetype2",
             min_version="9.11.3",
             alt_exec="freetype-config",
-            fallback_header="ft2build.h" if sys.platform == "win32"
-                       else "freetype2/ft2build.h")
+            fallback_header="ft2build.h")
 
 
 class Gtk(Package):

@@ -83,11 +83,14 @@ install:
   # if conda-forge gets a new pyqt, it might be nice to install it as well to have more backends
   # https://github.com/conda-forge/conda-forge.github.io/issues/157#issuecomment-223536381
   - conda create -q -n test-environment python=%PYTHON_VERSION%
-    pip setuptools numpy python-dateutil freetype=2.6 msinttypes "tk=8.5"
+    pip setuptools numpy python-dateutil msinttypes "tk=8.5"
     pyparsing pytz tornado "libpng>=1.6.21,<1.7" "zlib=1.2" "cycler>=0.10"
     mock sphinx pandas
   - activate test-environment
   - echo %PYTHON_VERSION% %TARGET_ARCH%
+  # conda-forge's freetype is a dynamic library whereas defaults' is a static
+  # one, which we want.
+  - conda install -c defaults freetype
   - if %PYTHON_VERSION% == 2.7 conda install -q backports.functools_lru_cache
   # pytest-cov>=2.3.1 due to https://github.com/pytest-dev/pytest-cov/issues/124
   - pip install -q pytest "pytest-cov>=2.3.1" pytest-rerunfailures pytest-timeout
