@@ -60,14 +60,15 @@ def build_local_freetype():
             print("Downloading {}".format(url))
             try:
                 urllib.request.urlretrieve(url, tarball_path)
-            except Exception:
+            except IOError:  # URLError (a subclass) on Py3.
                 print("Failed to download {}".format(url))
             else:
-                break
-    if not os.path.isfile(tarball_path):
-        sys.exit("Failed to download freetype")
-    if get_file_hash(tarball_path) != TESTS_FREETYPE_HASH:
-        sys.exit("{} does not match expected hash".format(tarball_path))
+                if get_file_hash(tarball_path) != TESTS_FREETYPE_HASH:
+                    print("Invalid hash")  # Could be a redirect.
+                else:
+                    break
+        else:
+            sys.exit("Failed to download freetype")
 
     # Build.
     shutil.rmtree(src_dir, ignore_errors=True)
