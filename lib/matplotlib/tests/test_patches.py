@@ -9,16 +9,14 @@ import numpy as np
 from numpy.testing import assert_almost_equal, assert_array_equal
 import pytest
 
-from matplotlib.patches import Polygon
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Polygon, Rectangle
 from matplotlib.testing.decorators import image_comparison
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import matplotlib.collections as mcollections
-from matplotlib import path as mpath
-from matplotlib import transforms as mtransforms
-import matplotlib.style as mstyle
+from matplotlib import (
+    collections as mcollections, colors as mcolors, patches as mpatches,
+    path as mpath, style as mstyle, transforms as mtransforms)
 
+from io import BytesIO
 import sys
 on_win = (sys.platform == 'win32')
 
@@ -410,3 +408,32 @@ def test_contains_points():
     expected = path.contains_points(points, transform, radius)
     result = ell.contains_points(points)
     assert np.all(result == expected)
+
+
+def test_shadow():
+    xy = np.array([.2, .3])
+    dxy = np.array([.1, .2])
+    # We need to work around the nonsensical (dpi-dependent) interpretation of
+    # offsets by the Shadow class...
+    with plt.rc_context({"savefig.dpi": "figure"}):
+        # Test image.
+        f1, a1 = plt.subplots()
+        rect = mpatches.Rectangle(xy=xy, width=.5, height=.5)
+        shadow = mpatches.Shadow(rect, ox=dxy[0], oy=dxy[1])
+        a1.add_patch(rect)
+        a1.add_patch(shadow)
+        b1 = BytesIO()
+        f1.savefig(b1, format="raw")
+        # Reference image.
+        f2, a2 = plt.subplots()
+        rect = mpatches.Rectangle(xy=xy, width=.5, height=.5)
+        shadow = mpatches.Rectangle(
+            xy=xy + f2.dpi / 72 * dxy, width=.5, height=.5,
+            fc=np.asarray(mcolors.to_rgb(rect.get_fc())) * .3,
+            ec=np.asarray(mcolors.to_rgb(rect.get_fc())) * .3,
+            alpha=.5)
+        a2.add_patch(shadow)
+        a2.add_patch(rect)
+        b2 = BytesIO()
+        f2.savefig(b2, format="raw")
+    assert b1.getvalue() == b2.getvalue()
