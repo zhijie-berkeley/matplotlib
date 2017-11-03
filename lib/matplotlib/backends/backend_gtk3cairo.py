@@ -3,6 +3,11 @@ from __future__ import (absolute_import, division, print_function,
 
 import six
 
+try:
+    from contextlib import ExitStack
+except ImportError:
+    from contextlib2 import ExitStack  # Py2
+
 from . import backend_cairo, backend_gtk3
 from .backend_cairo import cairo, HAS_CAIRO_CFFI
 from .backend_gtk3 import _BackendGTK3
@@ -34,15 +39,11 @@ class FigureCanvasGTK3Cairo(backend_gtk3.FigureCanvasGTK3,
 
     def on_draw_event(self, widget, ctx):
         """GtkDrawable draw event."""
-        toolbar = self.toolbar
-        if toolbar:
-            toolbar.set_cursor(cursors.WAIT)
-        self._renderer.set_context(ctx)
-        allocation = self.get_allocation()
-        self._render_figure(allocation.width, allocation.height)
-        if toolbar:
-            toolbar.set_cursor(toolbar._lastCursor)
-        return False  # finish event propagation?
+        with (self.toolbar._wait_cursor_for_draw_cm() if self.toolbar
+              else ExitStack()):
+            self._renderer.set_context(ctx)
+            allocation = self.get_allocation()
+            self._render_figure(allocation.width, allocation.height)
 
 
 class FigureManagerGTK3Cairo(backend_gtk3.FigureManagerGTK3):

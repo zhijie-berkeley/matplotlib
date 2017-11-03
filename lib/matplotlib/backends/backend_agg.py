@@ -24,10 +24,16 @@ from __future__ import (absolute_import, division, print_function,
 
 import six
 
-import threading
-import numpy as np
 from collections import OrderedDict
+try:
+    from contextlib import ExitStack
+except ImportError:
+    from contextlib2 import ExitStack  # Py2
+import threading
 from math import radians, cos, sin
+
+import numpy as np
+
 from matplotlib import cbook, rcParams, __version__
 from matplotlib.backend_bases import (
     _Backend, FigureCanvasBase, FigureManagerBase, RendererBase, cursors)
@@ -422,18 +428,11 @@ class FigureCanvasAgg(FigureCanvasBase):
         Draw the figure using the renderer
         """
         self.renderer = self.get_renderer(cleared=True)
-        # acquire a lock on the shared font cache
-        RendererAgg.lock.acquire()
-
-        toolbar = self.toolbar
-        try:
-            if toolbar:
-                toolbar.set_cursor(cursors.WAIT)
+        # Acquire a lock on the shared font cache.
+        with RendererAgg.lock, (
+                self.toolbar._wait_cursor_for_draw_cm() if self.toolbar
+                else ExitStack()):
             self.figure.draw(self.renderer)
-        finally:
-            if toolbar:
-                toolbar.set_cursor(toolbar._lastCursor)
-            RendererAgg.lock.release()
 
     def get_renderer(self, cleared=False):
         l, b, w, h = self.figure.bbox.bounds
