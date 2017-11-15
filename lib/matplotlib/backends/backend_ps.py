@@ -1111,10 +1111,16 @@ class FigureCanvasPS(FigureCanvasBase):
                             raise RuntimeError(msg)
                         else:
                             fh.flush()
-                            convert_ttf_to_ps(
-                                font_filename.encode(
-                                    sys.getfilesystemencoding()),
-                                fh, fonttype, glyph_ids)
+                            try:
+                                convert_ttf_to_ps(
+                                    font_filename.encode(
+                                        sys.getfilesystemencoding()),
+                                    fh, fonttype, glyph_ids)
+                            except RuntimeError:
+                                _log.warning("The PostScript backend does not "
+                                             "currently support the selected "
+                                             "font.")
+                                raise
             print("end", file=fh)
             print("%%EndProlog", file=fh)
 

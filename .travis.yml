@@ -35,6 +35,7 @@ addons:
       - graphviz
       - libgeos-dev
       - otf-freefont
+      - ttf-wqy-zenhei
 
 env:
   global:

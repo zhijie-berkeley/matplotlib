@@ -13,7 +13,7 @@ import pytest
 from matplotlib.font_manager import (
     findfont, FontProperties, fontManager, json_dump, json_load, get_font,
     get_fontconfig_fonts, is_opentype_cff_font, fontManager as fm)
-from matplotlib import rc_context
+from matplotlib import pyplot as plt, rc_context
 
 if six.PY2:
     from distutils.spawn import find_executable
@@ -106,3 +106,19 @@ def test_hinting_factor(factor):
     # Check that hinting only changes text layout by a small (10%) amount.
     np.testing.assert_allclose(hinted_font.get_width_height(), expected,
                                rtol=0.1)
+
+
+@pytest.mark.xfail(not os.environ.get("TRAVIS"), reason="Font may be missing.")
+def test_find_ttc():
+    fp = FontProperties(family=["WenQuanYi Zen Hei"])
+    font = findfont(fp)
+    assert os.path.basename(font) == "wqy-zenhei.ttc"
+
+    fig, ax = plt.subplots()
+    ax.text(.5, .5, "\N{KANGXI RADICAL DRAGON}", fontproperties=fp)
+    fig.savefig(six.BytesIO(), format="raw")
+    fig.savefig(six.BytesIO(), format="svg")
+    with pytest.raises(RuntimeError):
+        fig.savefig(six.BytesIO(), format="pdf")
+    with pytest.raises(RuntimeError):
+        fig.savefig(six.BytesIO(), format="ps")
