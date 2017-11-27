@@ -27,8 +27,6 @@ from matplotlib.backend_bases import (
     _Backend, FigureCanvasBase, FigureManagerBase, GraphicsContextBase,
     RendererBase)
 from matplotlib.backends.backend_mixed import MixedModeRenderer
-from matplotlib.cbook import (get_realpath_and_stat,
-                              is_writable_file_like, maxdict)
 from matplotlib.figure import Figure
 from matplotlib.font_manager import findfont, is_opentype_cff_font, get_font
 from matplotlib.afm import AFM
@@ -43,6 +41,7 @@ from matplotlib.dates import UTC
 from matplotlib import _path
 from matplotlib import _png
 from matplotlib import ttconv
+from . import _backend_pdf_ps
 
 _log = logging.getLogger(__name__)
 
@@ -710,7 +709,7 @@ class PdfFile(object):
             else:
                 # a normal TrueType font
                 _log.debug('Writing TrueType font.')
-                realpath, stat_key = get_realpath_and_stat(filename)
+                realpath, stat_key = cbook.get_realpath_and_stat(filename)
                 chars = self.used_characters.get(stat_key)
                 if chars is not None and len(chars[1]):
                     fonts[Fx] = self.embedTTF(realpath, chars[1])
@@ -1587,8 +1586,14 @@ end"""
         self.write(b"\nstartxref\n%d\n%%%%EOF\n" % self.startxref)
 
 
-class RendererPdf(RendererBase):
-    afm_font_cache = maxdict(50)
+class RendererPdf(_backend_pdf_ps.RendererPDFPSBase):
+    @property
+    @cbook.deprecated("3.0")
+    def afm_font_cache(self, _cache=cbook.maxdict(50)):
+        return _cache
+
+    _afm_font_dir = os.path.join(rcParams['datapath'], 'fonts', 'pdfcorefonts')
+    _use_afm_rc_name = "pdf.use14corefonts"
 
     def __init__(self, file, image_dpi, height, width):
         RendererBase.__init__(self)
@@ -1637,7 +1642,7 @@ class RendererPdf(RendererBase):
             fname = font
         else:
             fname = font.fname
-        realpath, stat_key = get_realpath_and_stat(fname)
+        realpath, stat_key = cbook.get_realpath_and_stat(fname)
         used_characters = self.file.used_characters.setdefault(
             stat_key, (realpath, set()))
         used_characters[1].update(map(ord, s))
@@ -1650,19 +1655,6 @@ class RendererPdf(RendererBase):
 
     def get_image_magnification(self):
         return self.image_dpi/72.0
-
-    def option_scale_image(self):
-        """
-        pdf backend support arbitrary scaling of image.
-        """
-        return True
-
-    def option_image_nocomposite(self):
-        """
-        return whether to generate a composite image from multiple images on
-        a set of axes
-        """
-        return not rcParams['image.composite_image']
 
     def draw_image(self, gc, x, y, im, transform=None):
         h, w = im.shape[:2]
@@ -2126,64 +2118,6 @@ class RendererPdf(RendererBase):
             return draw_text_simple()
         else:
             return draw_text_woven(chunks)
-
-    def get_text_width_height_descent(self, s, prop, ismath):
-        if rcParams['text.usetex']:
-            texmanager = self.get_texmanager()
-            fontsize = prop.get_size_in_points()
-            w, h, d = texmanager.get_text_width_height_descent(s, fontsize,
-                                                               renderer=self)
-            return w, h, d
-
-        if ismath:
-            w, h, d, glyphs, rects, used_characters = \
-                self.mathtext_parser.parse(s, 72, prop)
-
-        elif rcParams['pdf.use14corefonts']:
-            font = self._get_font_afm(prop)
-            l, b, w, h, d = font.get_str_bbox_and_descent(s)
-            scale = prop.get_size_in_points()
-            w *= scale / 1000
-            h *= scale / 1000
-            d *= scale / 1000
-        else:
-            font = self._get_font_ttf(prop)
-            font.set_text(s, 0.0, flags=LOAD_NO_HINTING)
-            w, h = font.get_width_height()
-            scale = (1.0 / 64.0)
-            w *= scale
-            h *= scale
-            d = font.get_descent()
-            d *= scale
-        return w, h, d
-
-    def _get_font_afm(self, prop):
-        key = hash(prop)
-        font = self.afm_font_cache.get(key)
-        if font is None:
-            filename = findfont(
-                prop, fontext='afm', directory=self.file._core14fontdir)
-            if filename is None:
-                filename = findfont(
-                    "Helvetica", fontext='afm',
-                    directory=self.file._core14fontdir)
-            font = self.afm_font_cache.get(filename)
-            if font is None:
-                with open(filename, 'rb') as fh:
-                    font = AFM(fh)
-                    self.afm_font_cache[filename] = font
-            self.afm_font_cache[key] = font
-        return font
-
-    def _get_font_ttf(self, prop):
-        filename = findfont(prop)
-        font = get_font(filename)
-        font.clear()
-        font.set_size(prop.get_size_in_points(), 72)
-        return font
-
-    def flipy(self):
-        return False
 
     def get_canvas_width_height(self):
         return self.file.width * 72.0, self.file.height * 72.0

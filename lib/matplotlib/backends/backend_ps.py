@@ -1,36 +1,40 @@
 """
-A PostScript backend, which can produce both PostScript .ps and .eps
+A PostScript backend, which can produce both PostScript .ps and .eps.
 """
-import glob, os, shutil, sys, time, datetime
+
+import binascii
+import datetime
+import glob
 import io
 import logging
+import os
+import re
+import shutil
 import subprocess
+import sys
+import tempfile
+import time
 
-from tempfile import mkstemp
-from matplotlib import cbook, __version__, rcParams, checkdep_ghostscript
-from matplotlib.afm import AFM
+import numpy as np
+
+from matplotlib import (
+    cbook, _path, __version__, rcParams, checkdep_ghostscript)
 from matplotlib.backend_bases import (
     _Backend, FigureCanvasBase, FigureManagerBase, GraphicsContextBase,
     RendererBase)
-
 from matplotlib.cbook import (get_realpath_and_stat, is_writable_file_like,
-                              maxdict, file_requires_unicode)
-
-from matplotlib.font_manager import findfont, is_opentype_cff_font, get_font
+                              file_requires_unicode)
+from matplotlib.font_manager import is_opentype_cff_font, get_font
 from matplotlib.ft2font import KERNING_DEFAULT, LOAD_NO_HINTING
 from matplotlib.ttconv import convert_ttf_to_ps
 from matplotlib.mathtext import MathTextParser
 from matplotlib._mathtext_data import uni2type1
 from matplotlib.path import Path
-from matplotlib import _path
 from matplotlib.transforms import Affine2D
 
 from matplotlib.backends.backend_mixed import MixedModeRenderer
+from . import _backend_pdf_ps
 
-
-import numpy as np
-import binascii
-import re
 
 _log = logging.getLogger(__name__)
 
@@ -172,13 +176,19 @@ def _move_path_to_path_or_stream(src, dst):
         os.chmod(dst, mode)
 
 
-class RendererPS(RendererBase):
+class RendererPS(_backend_pdf_ps.RendererPDFPSBase):
     """
     The renderer handles all the drawing primitives using a graphics
     context instance that controls the colors/styles.
     """
 
-    afmfontd = maxdict(50)
+    @property
+    @cbook.deprecated("3.0")
+    def afmfontd(self, _cache=cbook.maxdict(50)):
+        return _cache
+
+    _afm_font_dir = os.path.join(rcParams['datapath'], 'fonts', 'afm')
+    _use_afm_rc_name = "ps.useafm"
 
     def __init__(self, width, height, pswriter, imagedpi=72):
         """
@@ -210,9 +220,6 @@ class RendererPS(RendererBase):
 
         self.used_characters = {}
         self.mathtext_parser = MathTextParser("PS")
-
-        self._afm_font_dir = os.path.join(
-            rcParams['datapath'], 'fonts', 'afm')
 
     def track_characters(self, font, s):
         """Keeps track of which characters are required from
@@ -316,73 +323,6 @@ class RendererPS(RendererBase):
         'return the canvas width and height in display coords'
         return self.width * 72.0, self.height * 72.0
 
-    def get_text_width_height_descent(self, s, prop, ismath):
-        """
-        get the width and height in display coords of the string s
-        with FontPropertry prop
-
-        """
-        if rcParams['text.usetex']:
-            texmanager = self.get_texmanager()
-            fontsize = prop.get_size_in_points()
-            w, h, d = texmanager.get_text_width_height_descent(s, fontsize,
-                                                               renderer=self)
-            return w, h, d
-
-        if ismath:
-            width, height, descent, pswriter, used_characters = \
-                self.mathtext_parser.parse(s, 72, prop)
-            return width, height, descent
-
-        if rcParams['ps.useafm']:
-            if ismath: s = s[1:-1]
-            font = self._get_font_afm(prop)
-            l,b,w,h,d = font.get_str_bbox_and_descent(s)
-
-            fontsize = prop.get_size_in_points()
-            scale = 0.001*fontsize
-            w *= scale
-            h *= scale
-            d *= scale
-            return w, h, d
-
-        font = self._get_font_ttf(prop)
-        font.set_text(s, 0.0, flags=LOAD_NO_HINTING)
-        w, h = font.get_width_height()
-        w /= 64.0  # convert from subpixels
-        h /= 64.0
-        d = font.get_descent()
-        d /= 64.0
-        return w, h, d
-
-    def flipy(self):
-        'return true if small y numbers are top for renderer'
-        return False
-
-    def _get_font_afm(self, prop):
-        key = hash(prop)
-        font = self.afmfontd.get(key)
-        if font is None:
-            fname = findfont(prop, fontext='afm', directory=self._afm_font_dir)
-            if fname is None:
-                fname = findfont(
-                    "Helvetica", fontext='afm', directory=self._afm_font_dir)
-            font = self.afmfontd.get(fname)
-            if font is None:
-                with io.open(fname, 'rb') as fh:
-                    font = AFM(fh)
-                self.afmfontd[fname] = font
-            self.afmfontd[key] = font
-        return font
-
-    def _get_font_ttf(self, prop):
-        fname = findfont(prop)
-        font = get_font(fname)
-        font.clear()
-        size = prop.get_size_in_points()
-        font.set_size(size, 72.0)
-        return font
-
     def _rgb(self, rgba):
         h, w = rgba.shape[:2]
         rgb = rgba[::-1, :, :3]
@@ -404,19 +344,6 @@ class RendererPS(RendererBase):
         artists.
         """
         return self.image_magnification
-
-    def option_scale_image(self):
-        """
-        ps backend support arbitrary scaling of image.
-        """
-        return True
-
-    def option_image_nocomposite(self):
-        """
-        return whether to generate a composite image from multiple images on
-        a set of axes
-        """
-        return not rcParams['image.composite_image']
 
     def _get_image_h_w_bits_command(self, im):
         h, w, bits = self._rgb(im)
@@ -1155,7 +1082,7 @@ class FigureCanvasPS(FigureCanvasBase):
         if rcParams['ps.usedistiller']:
             # We are going to use an external program to process the output.
             # Write to a temporary file.
-            fd, tmpfile = mkstemp()
+            fd, tmpfile = tempfile.mkstemp()
             try:
                 with io.open(fd, 'w', encoding='latin-1') as fh:
                     print_figure_impl(fh)
@@ -1261,7 +1188,7 @@ class FigureCanvasPS(FigureCanvasBase):
 
         # write to a temp file, we'll move it to outfile when done
 
-        fd, tmpfile = mkstemp()
+        fd, tmpfile = tempfile.mkstemp()
         try:
             with io.open(fd, 'w', encoding='latin-1') as fh:
                 # write the Encapsulated PostScript headers
