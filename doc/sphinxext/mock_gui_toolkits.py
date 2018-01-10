@@ -2,10 +2,6 @@ import sys
 from unittest.mock import MagicMock
 
 
-class MyCairoCffi(MagicMock):
-    version_info = (1, 4, 0)
-
-
 class MyPyQt4(MagicMock):
     class QtGui(object):
         # PyQt4.QtGui public classes.
@@ -108,22 +104,10 @@ class MySip(MagicMock):
         return 1
 
 
-class MyWX(MagicMock):
-    class Panel(object):
-        pass
-
-    class ToolBar(object):
-        pass
-
-    class Frame(object):
-        pass
-
-
 def setup(app):
     sys.modules.update(
-        cairocffi=MyCairoCffi(),
+        cairocffi=MagicMock(),
         PyQt4=MyPyQt4(),
         sip=MySip(),
-        wx=MyWX(),
     )
     return {'parallel_read_safe': True, 'parallel_write_safe': True}

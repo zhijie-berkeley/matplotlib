@@ -7,8 +7,6 @@ Hunter (jdhunter@ace.bsd.uchicago.edu).
 Copyright (C) Jeremy O'Donoghue & John Hunter, 2003-4.
 """
 
-import six
-
 import os.path
 import math
 import sys
@@ -21,13 +19,13 @@ from matplotlib.backend_bases import (
     NavigationToolbar2, RendererBase, TimerBase, cursors)
 from matplotlib.backend_bases import _has_pil
 
+from matplotlib import cbook, rcParams, backend_tools
 from matplotlib._pylab_helpers import Gcf
 from matplotlib.cbook import is_writable_file_like, warn_deprecated
 from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.transforms import Affine2D
 from matplotlib.widgets import SubplotTool
-from matplotlib import cbook, rcParams, backend_tools
 
 import wx
 
@@ -37,30 +35,25 @@ import wx
 # traceback is performed, and pdb activated, for all uncaught exceptions in
 # this case
 _DEBUG = 5
-if _DEBUG < 5:
-    import traceback
-    import pdb
 _DEBUG_lvls = {1: 'Low ', 2: 'Med ', 3: 'High', 4: 'Error'}
 
 
 def DEBUG_MSG(string, lvl=3, o=None):
     if lvl >= _DEBUG:
-        cls = o.__class__
-        # Jeremy, often times the commented line won't print but the
-        # one below does.  I think WX is redefining stderr, damned
-        # beast
-        # print("%s- %s in %s" % (_DEBUG_lvls[lvl], string, cls),
-        #       file=sys.stderr)
-        print("%s- %s in %s" % (_DEBUG_lvls[lvl], string, cls))
+        print("%s- %s in %s" % (_DEBUG_lvls[lvl], string, type(o)))
 
 
+@cbook.deprecated("3.0")
 def debug_on_error(type, value, tb):
     """Code due to Thomas Heller - published in Python Cookbook (O'Reilley)"""
+    import pdb
+    import traceback
     traceback.print_exception(type, value, tb)
     print()
-    pdb.pm()  # jdh uncomment
+    pdb.pm()
 
 
+@cbook.deprecated("3.0")
 class fake_stderr(object):
     """
     Wx does strange things with stderr, as it makes the assumption that
@@ -95,9 +88,10 @@ def error_msg_wx(msg, parent=None):
     return None
 
 
+@cbook.deprecated("3.0")
 def raise_msg_to_str(msg):
     """msg is a return arg from a raise.  Join with new lines."""
-    if not isinstance(msg, six.string_types):
+    if not isinstance(msg, str):
         msg = '\n'.join(map(str, msg))
     return msg
 
@@ -1106,22 +1100,16 @@ class FigureCanvasWx(_FigureCanvasWxBase):
             image = self.bitmap.ConvertToImage()
             image.SetOption(wx.IMAGE_OPTION_QUALITY, str(jpeg_quality))
 
-        # Now that we have rendered into the bitmap, save it
-        # to the appropriate file type and clean up
-        if isinstance(filename, six.string_types):
+        # Now that we have rendered into the bitmap, save it to the appropriate
+        # file type and clean up.
+        if isinstance(filename, str):
             if not image.SaveFile(filename, filetype):
-                DEBUG_MSG('print_figure() file save error', 4, self)
-                raise RuntimeError(
-                    'Could not save figure to %s\n' %
-                    (filename))
+                raise RuntimeError('Could not save figure to %s' % filename)
         elif is_writable_file_like(filename):
             if not isinstance(image, wx.Image):
                 image = image.ConvertToImage()
             if not image.SaveStream(filename, filetype):
-                DEBUG_MSG('print_figure() file save error', 4, self)
-                raise RuntimeError(
-                    'Could not save figure to %s\n' %
-                    (filename))
+                raise RuntimeError('Could not save figure to %s' % filename)
 
         # Restore everything to normal
         self.bitmap = origBitmap
@@ -1288,11 +1276,7 @@ class FigureManagerWx(FigureManagerBase):
         self.canvas.SetInitialSize(wx.Size(width, height))
         self.window.GetSizer().Fit(self.window)
 
-# Identifiers for toolbar controls - images_wx contains bitmaps for the images
-# used in the controls. wxWindows does not provide any stock images, so I've
-# 'stolen' those from GTK2, and transformed them into the appropriate format.
-# import images_wx
-
+# Identifiers for toolbar controls.
 
 _NTB_AXISMENU = wx.NewId()
 _NTB_AXISMENU_BUTTON = wx.NewId()
@@ -1304,7 +1288,6 @@ _NTB_Y_PAN_UP = wx.NewId()
 _NTB_Y_PAN_DOWN = wx.NewId()
 _NTB_Y_ZOOMIN = wx.NewId()
 _NTB_Y_ZOOMOUT = wx.NewId()
-# _NTB_SUBPLOT            =wx.NewId()
 _NTB_SAVE = wx.NewId()
 _NTB_CLOSE = wx.NewId()
 
@@ -1328,6 +1311,7 @@ def _load_bitmap(filename):
     return bmp
 
 
+@cbook.deprecated("3.0")
 class MenuButtonWx(wx.Button):
     """
     wxPython does not permit a menu to be incorporated directly into a toolbar.
@@ -1405,7 +1389,7 @@ class MenuButtonWx(wx.Button):
         """Ensures that there are entries for max_axis axes in the menu
         (selected by default)."""
         if maxAxis > len(self._axisId):
-            for i in range(len(self._axisId) + 1, maxAxis + 1, 1):
+            for i in range(len(self._axisId) + 1, maxAxis + 1):
                 menuId = wx.NewId()
                 self._axisId.append(menuId)
                 self._menu.Append(menuId, "Axis %d" % i,
@@ -1678,15 +1662,9 @@ class StatusBarWx(wx.StatusBar):
     def __init__(self, parent):
         wx.StatusBar.__init__(self, parent, -1)
         self.SetFieldsCount(2)
-        self.SetStatusText("None", 1)
-        # self.SetStatusText("Measurement: None", 2)
-        # self.Reposition()
 
     def set_function(self, string):
         self.SetStatusText("%s" % string, 1)
-
-    # def set_measurement(self, string):
-    #    self.SetStatusText("Measurement: %s" % string, 2)
 
 
 # tools for matplotlib.backend_managers.ToolManager:
@@ -1846,6 +1824,7 @@ backend_tools.ToolCopyToClipboard = ToolCopyToClipboardWx
 
 # < Additions for printing support: Matt Newville
 
+@cbook.deprecated("3.0")
 class PrintoutWx(wx.Printout):
     """
     Simple wrapper around wx Printout class -- all the real work
@@ -1927,7 +1906,6 @@ class PrintoutWx(wx.Printout):
         self.canvas.figure.dpi = fig_dpi
         self.canvas.draw()
         return True
-# >
 
 
 @_Backend.export

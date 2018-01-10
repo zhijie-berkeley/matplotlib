@@ -1,5 +1,5 @@
 """
-Render to qt from agg
+Render to qt from agg.
 """
 
 import ctypes
@@ -30,8 +30,8 @@ class FigureCanvasQTAgg(FigureCanvasAgg, FigureCanvasQT):
             return
         self._draw_idle()  # Only does something if a draw is pending.
 
-        # if the canvas does not have a renderer, then give up and wait for
-        # FigureCanvasAgg.draw(self) to be called
+        # If the canvas does not have a renderer, then give up and wait for
+        # FigureCanvasAgg.draw(self) to be called.
         if not hasattr(self, 'renderer'):
             return
 

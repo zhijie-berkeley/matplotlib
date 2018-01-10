@@ -30,9 +30,6 @@ except ImportError:
 else:
     HAS_CAIRO_CFFI = True
 
-if cairo.version_info < (1, 4, 0):
-    raise ImportError("cairo {} is installed; "
-                      "cairo>=1.4.0 is required".format(cairo.version))
 backend_version = cairo.version
 
 from matplotlib import cbook
