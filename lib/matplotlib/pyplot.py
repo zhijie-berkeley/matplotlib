@@ -30,7 +30,7 @@ from cycler import cycler
 import matplotlib
 import matplotlib.colorbar
 from matplotlib import style
-from matplotlib import _pylab_helpers, interactive
+from matplotlib import _docstring, _pylab_helpers, interactive
 from matplotlib.cbook import dedent, silent_list, is_numlike
 from matplotlib.cbook import _string_to_bool
 from matplotlib.cbook import deprecated, warn_deprecated
@@ -1594,7 +1594,7 @@ def ylim(*args, **kwargs):
     return ret
 
 
-@docstring.dedent_interpd
+@_docstring.interpolate()
 def xscale(*args, **kwargs):
     """
     Set the scaling of the *x*-axis.
@@ -1603,11 +1603,11 @@ def xscale(*args, **kwargs):
 
       xscale(scale, **kwargs)
 
-    The available scales are: %(scale)s
+    The available scales are: {matplotlib.scale._scales}
 
     Different keywords may be accepted, depending on the scale:
 
-    %(scale_docs)s
+        {matplotlib.scale._scale_docs}
     """
     gca().set_xscale(*args, **kwargs)
 
@@ -1621,11 +1621,11 @@ def yscale(*args, **kwargs):
 
       yscale(scale, **kwargs)
 
-    The available scales are: %(scale)s
+    The available scales are: {matplotlib.scale._scales}
 
     Different keywords may be accepted, depending on the scale:
 
-    %(scale_docs)s
+        {matplotlib.scale._scale_docs}
     """
     gca().set_yscale(*args, **kwargs)
 

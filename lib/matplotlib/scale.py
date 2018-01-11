@@ -588,3 +588,8 @@ docstring.interpd.update(
     scale=' | '.join([repr(x) for x in get_scale_names()]),
     scale_docs=get_scale_docs().rstrip(),
     )
+
+
+# Docstring interpolation values.
+_scales = ' | '.join([repr(x) for x in get_scale_names()])
+_scale_docs = get_scale_docs()

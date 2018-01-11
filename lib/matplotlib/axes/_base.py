@@ -15,10 +15,9 @@ import numpy as np
 
 import matplotlib
 
-from matplotlib import cbook
+from matplotlib import _docstring, cbook
 from matplotlib.cbook import (_check_1d, _string_to_bool, iterable,
                               index_of, get_label)
-from matplotlib import docstring
 import matplotlib.colors as mcolors
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
@@ -2619,7 +2618,7 @@ class _AxesBase(martist.Artist):
         self._axisbelow = validate_axisbelow(b)
         self.stale = True
 
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def grid(self, b=None, which='major', axis='both', **kwargs):
         """
         Turn the axes grids on or off.
@@ -2642,7 +2641,7 @@ class _AxesBase(martist.Artist):
 
         Valid :class:`~matplotlib.lines.Line2D` kwargs are
 
-        %(Line2D)s
+        {mlines.Line2D!P}
 
         """
         if len(kwargs):
@@ -3098,16 +3097,17 @@ class _AxesBase(martist.Artist):
     get_xscale.__doc__ = "Return the xaxis scale string: %s""" % (
         ", ".join(mscale.get_scale_names()))
 
+    @_docstring.interpolate({"axis": "x"})
     def set_xscale(self, value, **kwargs):
         """
-        Set the x-axis scale.
+        Set the {axis}-axis scale.
 
         ..
             ACCEPTS: [ 'linear' | 'log' | 'symlog' | 'logit' | ... ]
 
         Parameters
         ----------
-        value : {"linear", "log", "symlog", "logit"}
+        value : {{"linear", "log", "symlog", "logit"}}
             scaling strategy to apply
 
         Notes
@@ -3423,33 +3423,8 @@ class _AxesBase(martist.Artist):
     get_yscale.__doc__ = "Return the yaxis scale string: %s""" % (
         ", ".join(mscale.get_scale_names()))
 
+    @_docstring.reinterpolate(set_xscale, {"axis": "y"})
     def set_yscale(self, value, **kwargs):
-        """
-        Set the y-axis scale.
-
-        ..
-            ACCEPTS: [ 'linear' | 'log' | 'symlog' | 'logit' | ... ]
-
-        Parameters
-        ----------
-        value : {"linear", "log", "symlog", "logit"}
-            scaling strategy to apply
-
-        Notes
-        -----
-        Different kwargs are accepted, depending on the scale. See
-        the `~matplotlib.scale` module for more information.
-
-        See also
-        --------
-        matplotlib.scale.LinearScale : linear transfrom
-
-        matplotlib.scale.LogTransform : log transform
-
-        matplotlib.scale.SymmetricalLogTransform : symlog transform
-
-        matplotlib.scale.LogisticTransform : logit transform
-        """
         g = self.get_shared_y_axes()
         for ax in g.get_siblings(self):
             ax.yaxis._set_scale(value, **kwargs)

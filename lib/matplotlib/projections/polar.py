@@ -7,10 +7,10 @@ from collections import OrderedDict
 
 import numpy as np
 
+from matplotlib import _docstring
 from matplotlib.axes import Axes
 import matplotlib.axis as maxis
 from matplotlib import cbook
-from matplotlib import docstring
 import matplotlib.markers as mmarkers
 import matplotlib.patches as mpatches
 import matplotlib.path as mpath
@@ -1226,7 +1226,7 @@ class PolarAxes(Axes):
     def set_rticks(self, *args, **kwargs):
         return Axes.set_yticks(self, *args, **kwargs)
 
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def set_thetagrids(self, angles, labels=None, frac=None, fmt=None,
                        **kwargs):
         """
@@ -1249,7 +1249,7 @@ class PolarAxes(Axes):
 
         kwargs are optional text properties for the labels:
 
-        %(Text)s
+        {matplotlib.text.Text!P}
 
         ACCEPTS: sequence of floats
         """
@@ -1270,7 +1270,7 @@ class PolarAxes(Axes):
             t.update(kwargs)
         return self.xaxis.get_ticklines(), self.xaxis.get_ticklabels()
 
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def set_rgrids(self, radii, labels=None, angle=None, fmt=None,
                    **kwargs):
         """
@@ -1290,7 +1290,7 @@ class PolarAxes(Axes):
 
         kwargs are optional text properties for the labels:
 
-        %(Text)s
+        {matplotlib.text.Text!P}
 
         ACCEPTS: sequence of floats
         """

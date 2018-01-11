@@ -14,7 +14,7 @@ import numpy as np
 from numpy import ma
 
 import matplotlib
-from matplotlib import _preprocess_data
+from matplotlib import _docstring, _preprocess_data
 
 import matplotlib.cbook as cbook
 import matplotlib.collections as mcoll
@@ -279,7 +279,6 @@ class Axes(_AxesBase):
                 legend_handler_map)
         return handles, labels
 
-    @docstring.dedent_interpd
     def legend(self, *args, **kwargs):
         """
         Places a legend on the axes.
@@ -636,7 +635,6 @@ class Axes(_AxesBase):
         self._add_text(t)
         return t
 
-    @docstring.dedent_interpd
     def annotate(self, *args, **kwargs):
         a = mtext.Annotation(*args, **kwargs)
         a.set_transform(mtransforms.IdentityTransform())
@@ -647,7 +645,7 @@ class Axes(_AxesBase):
     annotate.__doc__ = mtext.Annotation.__init__.__doc__
     #### Lines and spans
 
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def axhline(self, y=0, xmin=0, xmax=1, **kwargs):
         """
         Add a horizontal line across the axis.
@@ -675,7 +673,7 @@ class Axes(_AxesBase):
             Valid kwargs are :class:`~matplotlib.lines.Line2D` properties,
             with the exception of 'transform':
 
-            %(Line2D)s
+            {mlines.Line2D!P}
 
         Notes
         -----
@@ -722,7 +720,7 @@ class Axes(_AxesBase):
         self.autoscale_view(scalex=False, scaley=scaley)
         return l
 
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def axvline(self, x=0, ymin=0, ymax=1, **kwargs):
         """
         Add a vertical line across the axes.
@@ -750,7 +748,7 @@ class Axes(_AxesBase):
             Valid kwargs are :class:`~matplotlib.lines.Line2D` properties,
             with the exception of 'transform':
 
-            %(Line2D)s
+            {mlines.Line2D!P}
 
         Examples
         --------
@@ -791,7 +789,7 @@ class Axes(_AxesBase):
         self.autoscale_view(scalex=scalex, scaley=False)
         return l
 
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def axhspan(self, ymin, ymax, xmin=0, xmax=1, **kwargs):
         """
         Add a horizontal span (rectangle) across the axis.
@@ -825,7 +823,7 @@ class Axes(_AxesBase):
         ----------------
         **kwargs : `~matplotlib.patches.Polygon` properties.
 
-        %(Polygon)s
+        {mpatches.Polygon!P}
 
         See Also
         --------
@@ -1070,7 +1068,6 @@ class Axes(_AxesBase):
                                      "linelengths", "linewidths",
                                      "colors", "linestyles"],
                       label_namer=None)
-    @docstring.dedent_interpd
     def eventplot(self, positions, orientation='horizontal', lineoffsets=1,
                   linelengths=1, linewidths=None, colors=None,
                   linestyles='solid', **kwargs):
@@ -1286,7 +1283,7 @@ class Axes(_AxesBase):
     @_preprocess_data(replace_names=["x", "y"],
                       positional_parameter_names=_plot_args_replacer,
                       label_namer=None)
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def plot(self, *args, **kwargs):
         """
         Plot y versus x as lines and/or markers.
@@ -1418,7 +1415,7 @@ linewidth=2, markersize=12)
 
             Here is a list of available `~.Line2D` properties:
 
-            %(Line2D)s
+            {mlines.Line2D!P}
 
         Returns
         -------
@@ -1531,7 +1528,7 @@ linewidth=2, markersize=12)
         return lines
 
     @_preprocess_data(replace_names=["x", "y"], label_namer="y")
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def plot_date(self, x, y, fmt='o', tz=None, xdate=True, ydate=False,
                   **kwargs):
         """
@@ -1591,7 +1588,7 @@ linewidth=2, markersize=12)
             Keyword arguments control the :class:`~matplotlib.lines.Line2D`
             properties:
 
-            %(Line2D)s
+            {mlines.Line2D!P}
 
         """
 
@@ -1610,7 +1607,7 @@ linewidth=2, markersize=12)
         return ret
 
     # @_preprocess_data() # let 'plot' do the unpacking..
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def loglog(self, *args, **kwargs):
         """
         Make a plot with log scaling on both the *x* and *y* axis.
@@ -1641,7 +1638,7 @@ linewidth=2, markersize=12)
             The remaining valid kwargs are :class:`~matplotlib.lines.Line2D`
             properties:
 
-            %(Line2D)s
+            {mlines.Line2D!P}
 
         """
         if not self._hold:
@@ -1663,7 +1660,7 @@ linewidth=2, markersize=12)
         return l
 
     # @_preprocess_data() # let 'plot' do the unpacking..
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def semilogx(self, *args, **kwargs):
         """
         Make a plot with log scaling on the x axis.
@@ -1679,7 +1676,7 @@ linewidth=2, markersize=12)
             plot; see :meth:`~matplotlib.axes.Axes.set_xscale` for
             details.
 
-        nonposx : string, optional, {'mask', 'clip'}
+        nonposx : string, optional, {{'mask', 'clip'}}
             Non-positive values in x can be masked as
             invalid, or clipped to a very small positive number.
 
@@ -1694,7 +1691,7 @@ linewidth=2, markersize=12)
             Keyword arguments control the :class:`~matplotlib.lines.Line2D`
             properties:
 
-            %(Line2D)s
+            {mlines.Line2D!P}
 
         Notes
         -----
@@ -1715,7 +1712,7 @@ linewidth=2, markersize=12)
         return l
 
     # @_preprocess_data() # let 'plot' do the unpacking..
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def semilogy(self, *args, **kwargs):
         """
         Make a plot with log scaling on the y axis.
@@ -1731,7 +1728,7 @@ linewidth=2, markersize=12)
             plot; see :meth:`~matplotlib.axes.Axes.set_yscale` for
             details.
 
-        nonposy : string, optional, {'mask', 'clip'}
+        nonposy : string, optional, {{'mask', 'clip'}}
             Non-positive values in *y* can be masked as
             invalid, or clipped to a very small positive number.
 
@@ -1746,7 +1743,7 @@ linewidth=2, markersize=12)
             Keyword arguments control the :class:`~matplotlib.lines.Line2D`
             properties:
 
-            %(Line2D)s
+            {mlines.Line2D!P}
 
         Notes
         -----
@@ -1977,7 +1974,7 @@ linewidth=2, markersize=12)
                       label_namer=None,
                       replace_all_args=True
                       )
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def bar(self, *args, **kwargs):
         r"""
         Make a bar plot.
@@ -2012,7 +2009,7 @@ linewidth=2, markersize=12)
         bottom : scalar or array-like, optional
             The y coordinate(s) of the bars bases (default: 0).
 
-        align : {'center', 'edge'}, optional, default: 'center'
+        align : {{'center', 'edge'}}, optional, default: 'center'
             Alignment of the bars to the *x* coordinates:
 
             - 'center': Center the base on the *x* positions.
@@ -2067,7 +2064,7 @@ linewidth=2, markersize=12)
         log : bool, optional, default: False
             If *True*, set the y-axis to be log scale.
 
-        orientation : {'vertical',  'horizontal'}, optional
+        orientation : {{'vertical',  'horizontal'}}, optional
             *This is for internal use only.* Please use `barh` for
             horizontal bar plots. Default: 'vertical'.
 
@@ -2087,7 +2084,7 @@ linewidth=2, markersize=12)
 
         Other optional kwargs:
 
-        %(Rectangle)s
+        {mpatches.Rectangle!P}
 
         """
         kwargs = cbook.normalize_kwargs(kwargs, mpatches._patch_alias_map)
@@ -2294,7 +2291,7 @@ linewidth=2, markersize=12)
 
         return bar_container
 
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def barh(self, *args, **kwargs):
         r"""
         Make a horizontal bar plot.
@@ -2329,7 +2326,7 @@ linewidth=2, markersize=12)
         left : sequence of scalars
             The x coordinates of the left sides of the bars (default: 0).
 
-        align : {'center', 'edge'}, optional, default: 'center'
+        align : {{'center', 'edge'}}, optional, default: 'center'
             Alignment of the base to the *y* coordinates*:
 
             - 'center': Center the bars on the *y* positions.
@@ -2401,7 +2398,7 @@ linewidth=2, markersize=12)
 
         Other optional kwargs:
 
-        %(Rectangle)s
+        {mpatches.Rectangle!P}
 
         """
         # this is using the lambdas to do the arg/kwarg unpacking rather
@@ -2436,7 +2433,7 @@ linewidth=2, markersize=12)
         return patches
 
     @_preprocess_data(label_namer=None)
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def broken_barh(self, xranges, yrange, **kwargs):
         """
         Plot a horizontal sequence of rectangles.
@@ -2474,7 +2471,7 @@ linewidth=2, markersize=12)
 
             Supported keywords:
 
-            %(BrokenBarHCollection)s
+            {BrokenBarHCollection!P}
 
         Returns
         -------
@@ -2856,7 +2853,7 @@ linewidth=2, markersize=12)
 
     @_preprocess_data(replace_names=["x", "y", "xerr", "yerr"],
                       label_namer="y")
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def errorbar(self, x, y, yerr=None, xerr=None,
                  fmt='', ecolor=None, elinewidth=None, capsize=None,
                  barsabove=False, lolims=False, uplims=False,
@@ -2959,7 +2956,7 @@ linewidth=2, markersize=12)
 
             Valid kwargs for the marker properties are
 
-            %(Line2D)s
+            {mlines.Line2D!P}
         """
         kwargs = cbook.normalize_kwargs(kwargs, _alias_map)
         # anything that comes in as 'None', drop so the default thing
@@ -4228,7 +4225,7 @@ linewidth=2, markersize=12)
         return collection
 
     @_preprocess_data(replace_names=["x", "y"], label_namer="y")
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def hexbin(self, x, y, C=None, gridsize=100, bins=None,
                xscale='linear', yscale='linear', extent=None,
                cmap=None, norm=None, vmin=None, vmax=None,
@@ -4264,12 +4261,12 @@ linewidth=2, markersize=12)
             tuple with two elements specifying the number of hexagons
             in the *x*-direction and the *y*-direction.
 
-        bins : {'log'} or int or sequence, optional, default is *None*
+        bins : {{'log'}} or int or sequence, optional, default is *None*
             If *None*, no binning is applied; the color of each hexagon
             directly corresponds to its count value.
 
             If 'log', use a logarithmic scale for the color
-            map. Internally, :math:`log_{10}(i+1)` is used to
+            map. Internally, :math:`log_{{10}}(i+1)` is used to
             determine the hexagon color.
 
             If an integer, divide the counts in the specified number
@@ -4278,10 +4275,10 @@ linewidth=2, markersize=12)
             If a sequence of values, the values of the lower bound of
             the bins to be used.
 
-        xscale : {'linear', 'log'}, optional, default is 'linear'
+        xscale : {{'linear', 'log'}}, optional, default is 'linear'
             Use a linear or log10 scale on the horizontal axis.
 
-        yscale : {'linear', 'log'}, optional, default is 'linear'
+        yscale : {{'linear', 'log'}}, optional, default is 'linear'
             Use a linear or log10 scale on the vertical axis.
 
         mincnt : int > 0, optional, default is *None*
@@ -4326,7 +4323,7 @@ linewidth=2, markersize=12)
         linewidths : scalar, optional, default is *None*
             If *None*, defaults to 1.0.
 
-        edgecolors : {'face', 'none', *None*} or color, optional
+        edgecolors : {{'face', 'none', *None*}} or color, optional
 
             If 'face' (the default), draws the edges in the same color as the
             fill color.
@@ -4355,7 +4352,7 @@ linewidth=2, markersize=12)
         The standard descriptions of all the
         :class:`~matplotlib.collections.Collection` parameters:
 
-            %(Collection)s
+            {mcoll.Collection!P}
 
         """
 
@@ -4672,7 +4669,7 @@ linewidth=2, markersize=12)
 
         return collection
 
-    @docstring.dedent_interpd
+    @_docstring.interpolate()
     def arrow(self, x, y, dx, dy, **kwargs):
         """
         Add an arrow to the axes.
@@ -4701,7 +4698,7 @@ linewidth=2, markersize=12)
         Optional kwargs (inherited from FancyArrow patch) control the arrow
         construction and properties:
 
-        %(FancyArrow)s
+        {mpatches.FancyArrow!P}
 
         Notes
         -----
