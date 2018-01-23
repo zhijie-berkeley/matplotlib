@@ -8,7 +8,7 @@ import warnings
 
 from . import backend_agg, backend_gtk3
 from .backend_cairo import cairo, HAS_CAIRO_CFFI
-from .backend_gtk3 import _BackendGTK3
+from .backend_gtk3 import Gtk, _BackendGTK3
 from matplotlib import transforms
 
 if six.PY3 and not HAS_CAIRO_CFFI:
@@ -37,6 +37,10 @@ class FigureCanvasGTK3Agg(backend_gtk3.FigureCanvasGTK3,
 
         if not len(self._bbox_queue):
             self._render_figure(w, h)
+            Gtk.render_background(
+                self.get_style_context(), ctx,
+                allocation.x, allocation.y,
+                allocation.width, allocation.height)
             bbox_queue = [transforms.Bbox([[0, 0], [w, h]])]
         else:
             bbox_queue = self._bbox_queue
