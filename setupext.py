@@ -1422,6 +1422,16 @@ class Tri(SetupPackage):
         return ext
 
 
+class Util(SetupPackage):
+    name = "_util"
+
+    def get_extension(self):
+        sources = ["src/_util.c"]
+        ext = make_extension('matplotlib._util', sources)
+        Numpy().add_flags(ext)
+        return ext
+
+
 class InstallRequires(SetupPackage):
     name = "install_requires"
 

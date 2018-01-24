@@ -69,6 +69,7 @@ mpl_packages = [
     setupext.Contour(),
     setupext.QhullWrap(),
     setupext.Tri(),
+    setupext.Util(),
     'Optional subpackages',
     setupext.SampleData(),
     setupext.Toolkits(),

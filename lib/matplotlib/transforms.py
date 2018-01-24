@@ -47,7 +47,7 @@ import re
 import weakref
 import warnings
 
-from . import cbook
+from . import cbook, _util
 from .path import Path
 
 DEBUG = False
@@ -2065,9 +2065,10 @@ class Affine2D(Affine2DBase):
         calls to :meth:`rotate`, :meth:`rotate_deg`, :meth:`translate`
         and :meth:`scale`.
         """
-        translate_mtx = np.array(
-            [[1.0, 0.0, tx], [0.0, 1.0, ty], [0.0, 0.0, 1.0]], float)
-        self._mtx = np.dot(translate_mtx, self._mtx)
+        # translate_mtx = np.array(
+        #     [[1.0, 0.0, tx], [0.0, 1.0, ty], [0.0, 0.0, 1.0]], float)
+        # self._mtx = np.dot(translate_mtx, self._mtx)
+        _util.transform_translate(self._mtx, tx, ty)
         self.invalidate()
         return self
 
@@ -2084,9 +2085,10 @@ class Affine2D(Affine2DBase):
         """
         if sy is None:
             sy = sx
-        scale_mtx = np.array(
-            [[sx, 0.0, 0.0], [0.0, sy, 0.0], [0.0, 0.0, 1.0]], float)
-        self._mtx = np.dot(scale_mtx, self._mtx)
+        # scale_mtx = np.array(
+        #     [[sx, 0.0, 0.0], [0.0, sy, 0.0], [0.0, 0.0, 1.0]], float)
+        # self._mtx = np.dot(scale_mtx, self._mtx)
+        _util.transform_scale(self._mtx, sx, sy)
         self.invalidate()
         return self
 
