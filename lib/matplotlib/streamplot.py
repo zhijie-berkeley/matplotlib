@@ -190,7 +190,7 @@ def streamplot(axes, x, y, u, v, density=1, linewidth=None, color=None,
         streamlines.extend(np.hstack([points[:-1], points[1:]]))
 
         # Add arrows half way along each trajectory.
-        s = np.cumsum(np.sqrt(np.diff(tx) ** 2 + np.diff(ty) ** 2))
+        s = np.cumsum(np.hypot(np.diff(tx), np.diff(ty)))
         n = np.searchsorted(s, s[-1] / 2.)
         arrow_tail = (tx[n], ty[n])
         arrow_head = (np.mean(tx[n:n + 2]), np.mean(ty[n:n + 2]))
@@ -416,7 +416,7 @@ def get_integrator(u, v, dmap, minlength, maxlength, integration_direction):
     # speed (path length) will be in axes-coordinates
     u_ax = u / dmap.grid.nx
     v_ax = v / dmap.grid.ny
-    speed = np.ma.sqrt(u_ax ** 2 + v_ax ** 2)
+    speed = np.ma.hypot(u_ax, v_ax)
 
     def forward_time(xi, yi):
         ds_dt = interpgrid(speed, xi, yi)
@@ -539,7 +539,7 @@ def _integrate_rk12(x0, y0, dmap, f, maxlength):
 
         nx, ny = dmap.grid.shape
         # Error is normalized to the axes coordinates
-        error = np.sqrt(((dx2 - dx1) / nx) ** 2 + ((dy2 - dy1) / ny) ** 2)
+        error = np.hypot((dx2 - dx1) / nx, (dy2 - dy1) / ny)
 
         # Only save step if within error tolerance
         if error < maxerror:

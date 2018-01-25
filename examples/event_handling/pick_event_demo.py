@@ -122,7 +122,8 @@ if 1:  # picking with a custom hit test function
         xdata = line.get_xdata()
         ydata = line.get_ydata()
         maxd = 0.05
-        d = np.sqrt((xdata - mouseevent.xdata)**2. + (ydata - mouseevent.ydata)**2.)
+        d = np.sqrt(
+            (xdata - mouseevent.xdata)**2 + (ydata - mouseevent.ydata)**2)
 
         ind = np.nonzero(np.less_equal(d, maxd))
         if len(ind):

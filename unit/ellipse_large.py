@@ -14,7 +14,7 @@ x = 2692.440
 y = 6720.850
 
 # get is the radius of a circle through this point
-r = math.sqrt(x * x + y * y)
+r = np.hypot(x, y)
 
 # show some comparative circles
 delta = 6
@@ -29,7 +29,7 @@ def custom_ellipse(ax, x, y, major, minor, theta, numpoints=750, **kwargs):
     while incrTheta <= (2.0 * math.pi):
         a = major * math.cos(incrTheta)
         b = minor * math.sin(incrTheta)
-        l = math.sqrt((a ** 2) + (b ** 2))
+        l = np.hypot(a, b)
         phi = math.atan2(b, a)
         incrTheta += incr
 
@@ -40,7 +40,7 @@ def custom_ellipse(ax, x, y, major, minor, theta, numpoints=750, **kwargs):
     incrTheta = 2.0 * math.pi
     a = major * math.cos(incrTheta)
     b = minor * math.sin(incrTheta)
-    l = sqrt((a ** 2) + (b ** 2))
+    l = np.hypot(a, b)
     phi = math.atan2(b, a)
     xs.append(x + (l * math.cos(theta + phi)))
     ys.append(y + (l * math.sin(theta + phi)))
