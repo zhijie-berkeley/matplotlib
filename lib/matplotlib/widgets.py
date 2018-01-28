@@ -10,12 +10,13 @@ wide and tall you want your Axes to be to accommodate your widget.
 """
 
 import copy
+from numbers import Integral
 
 import numpy as np
-from matplotlib import rcParams
 
-from .patches import Circle, Rectangle, Ellipse
+from . import rcParams
 from .lines import Line2D
+from .patches import Circle, Rectangle, Ellipse
 from .transforms import blended_transform_factory
 
 
@@ -1459,7 +1460,7 @@ class _SelectorWidget(AxesWidget):
         self.background = None
         self.artists = []
 
-        if isinstance(button, int):
+        if isinstance(button, Integral):
             self.validButtons = [button]
         else:
             self.validButtons = button
