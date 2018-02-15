@@ -1,14 +1,11 @@
-from matplotlib.backend_bases import FigureCanvasBase
-from matplotlib.backend_bases import RendererBase
+import os
 
+from matplotlib.backend_bases import FigureCanvasBase, RendererBase
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 import matplotlib.path as path
 
 import numpy as np
-import os
-import shutil
-import tempfile
 import pytest
 
 
@@ -51,16 +48,12 @@ def test_uses_per_path():
     check(id, paths, tforms, offsets, facecolors[0:1], edgecolors)
 
 
-def test_get_default_filename():
-    try:
-        test_dir = tempfile.mkdtemp()
-        plt.rcParams['savefig.directory'] = test_dir
-        fig = plt.figure()
-        canvas = FigureCanvasBase(fig)
-        filename = canvas.get_default_filename()
-        assert filename == 'image.png'
-    finally:
-        shutil.rmtree(test_dir)
+def test_get_default_filename(tmpdir):
+    plt.rcParams['savefig.directory'] = str(tmpdir)
+    fig = plt.figure()
+    canvas = FigureCanvasBase(fig)
+    filename = canvas.get_default_filename()
+    assert filename == 'image.png'
 
 
 @pytest.mark.backend('pdf')
