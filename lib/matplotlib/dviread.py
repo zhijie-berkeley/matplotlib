@@ -25,7 +25,6 @@ import os
 import re
 import struct
 import subprocess
-import sys
 import textwrap
 
 import numpy as np
@@ -810,10 +809,7 @@ class PsfontsMap(object):
 
     def __init__(self, filename):
         self._font = {}
-        self._filename = filename
-        if isinstance(filename, bytes):
-            encoding = sys.getfilesystemencoding() or 'utf-8'
-            self._filename = filename.decode(encoding, errors='replace')
+        self._filename = os.fsdecode(filename)
         with open(filename, 'rb') as file:
             self._parse(file)
 
