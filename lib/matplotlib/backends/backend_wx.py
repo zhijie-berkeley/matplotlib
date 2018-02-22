@@ -18,6 +18,7 @@ from __future__ import (absolute_import, division, print_function,
 
 import six
 
+import functools
 import sys
 import os
 import os.path
@@ -111,6 +112,21 @@ def raise_msg_to_str(msg):
     if not isinstance(msg, six.string_types):
         msg = '\n'.join(map(str, msg))
     return msg
+
+
+@functools.lru_cache(1)
+def _ensure_wxapp():
+    """
+    Create a wx.App instance if none has been created so far.
+
+    The returned instance is cached (using ``lru_cache``) to prevent it from
+    being garbage collected.
+    """
+    wxapp = wx.GetApp()
+    if wxapp is None:
+        wxapp = wx.App(False)
+        wxapp.SetExitOnFrameDelete(True)
+    return wxapp
 
 
 class TimerWx(TimerBase):
@@ -622,6 +638,7 @@ class _FigureCanvasWxBase(FigureCanvasBase, wx.Panel):
           EVT_SIZE  (Resize event)
           EVT_PAINT (Paint event)
         """
+        _ensure_wxapp()
 
         FigureCanvasBase.__init__(self, figure)
         # Set preferred window size hint - helps the sizer (if one is
@@ -1290,6 +1307,10 @@ class FigureManagerWx(FigureManagerBase):
             if self.tb is not None:
                 self.tb.update()
         self.canvas.figure.add_axobserver(notify_axes_change)
+
+        if matplotlib.is_interactive():
+            self.frame.Show()
+            self.canvas.draw_idle()
 
     def show(self):
         self.frame.Show()
@@ -1972,27 +1993,6 @@ class _BackendWx(_Backend):
     @staticmethod
     def trigger_manager_draw(manager):
         manager.canvas.draw_idle()
-
-    @classmethod
-    def new_figure_manager(cls, num, *args, **kwargs):
-        # Create a wx.App instance if it has not been created sofar.
-        wxapp = wx.GetApp()
-        if wxapp is None:
-            wxapp = wx.App(False)
-            wxapp.SetExitOnFrameDelete(True)
-            # Retain a reference to the app object so that it does not get
-            # garbage collected.
-            _BackendWx._theWxApp = wxapp
-        return super().new_figure_manager(num, *args, **kwargs)
-
-    @classmethod
-    def new_figure_manager_given_figure(cls, num, figure):
-        frame = cls._frame_class(num, figure)
-        figmgr = frame.get_figure_manager()
-        if matplotlib.is_interactive():
-            figmgr.frame.Show()
-            figure.canvas.draw_idle()
-        return figmgr
 
     @staticmethod
     def mainloop():
