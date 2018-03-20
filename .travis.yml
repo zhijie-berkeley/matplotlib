@@ -19,18 +19,15 @@ addons:
     - result_images.tar.bz2
   apt:
     packages:
-      - cm-super
-      - dvipng
-      - gdb
-      - gir1.2-gtk-3.0
-      - graphviz
+      # External tools
       - inkscape
       - libav-tools
-      - libcairo2
-      - libgeos-dev
-      - libgirepository-1.0.1
-      - lmodern
+      # Fonts
       - otf-freefont
+      # TeX
+      - cm-super
+      - dvipng
+      - lmodern
       - pgf
       - texlive-fonts-recommended
       - texlive-latex-base
@@ -38,6 +35,9 @@ addons:
       - texlive-latex-recommended
       - texlive-xetex
       - texlive-luatex
+      # PyGObject
+      - libcairo2-dev
+      - libgirepository1.0-dev
 
 env:
   global:
@@ -146,10 +146,10 @@ install:
     # install was successful by trying to import the toolkit (sometimes, the
     # install appears to be successful but shared libraries cannot be loaded at
     # runtime, so an actual import is a better check).
-    python -mpip install cairocffi pgi &&
-      python -c 'import pgi as gi; gi.require_version("Gtk", "3.0"); from pgi.repository import Gtk' &&
-      echo 'pgi is available' ||
-      echo 'pgi is not available'
+    python -mpip install pygobject &&
+      python -c 'import gi; gi.require_version("Gtk", "3.0"); from gi.repository import Gtk' &&
+      echo 'gi is available' ||
+      echo 'gi is not available'
     python -mpip install pyqt5==5.9 &&
       python -c 'import PyQt5.QtCore' &&
       echo 'PyQt5 is available' ||
