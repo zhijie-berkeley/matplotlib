@@ -8,9 +8,9 @@ import warnings
 
 import numpy as np
 
-import matplotlib
+import matplotlib as mpl
 
-from matplotlib import cbook
+from matplotlib import cbook, rcParams
 from matplotlib.cbook import (_check_1d, _string_to_bool, iterable,
                               index_of, get_label)
 from matplotlib import docstring
@@ -34,8 +34,6 @@ from matplotlib.rcsetup import cycler
 from matplotlib.rcsetup import validate_axisbelow
 
 _log = logging.getLogger(__name__)
-
-rcParams = matplotlib.rcParams
 
 
 def _process_plot_format(fmt):
@@ -179,6 +177,50 @@ class _process_plot_var_args(object):
                 yunits = kwargs.pop('runits', yunits)
             if yunits != self.axes.yaxis.units:
                 self.axes.yaxis.set_units(yunits)
+
+        if not args:
+            return
+
+        data = kwargs.pop("data", None)
+        if data is not None:
+            replaced = [mpl._replacer(data, arg) for arg in args]
+            if len(args) == 1:
+                label_namer_idx = 0
+            elif len(args) == 2:  # Can be x, y or y, c.
+                # Figure out what the second argument is.
+                # 1) If the second argument cannot be a format shorthand, the
+                #    second argument is the label_namer.
+                # 2) Otherwise (it could have been a format shorthand),
+                #    a) if we did perform a substitution, emit a warning, and
+                #       use it as label_namer.
+                #    b) otherwise, it is indeed a format shorthand; use the
+                #       first argument as label_namer.
+                try:
+                    _process_plot_format(args[1])
+                except ValueError:  # case 1)
+                    label_namer_idx = 1
+                else:
+                    if replaced[1] is not args[1]:  # case 2a)
+                        warnings.warn(
+                            "Second argument {!r} is ambiguous: could be a "
+                            "color spec but is in data; using as data.  "
+                            "Either rename the entry in data or use three "
+                            "arguments to plot.".format(args[1]),
+                            RuntimeWarning, stacklevel=3)
+                        label_namer_idx = 1
+                    else:  # case 2b)
+                        label_namer_idx = 0
+            elif len(args) == 3:
+                label_namer_idx = 1
+            else:
+                raise ValueError(
+                    "Using arbitrary long args with data is not supported due "
+                    "to ambiguity of arguments; use multiple plotting calls "
+                    "instead")
+            if kwargs.get("label") is None:
+                kwargs["label"] = mpl._label_from_arg(
+                    replaced[label_namer_idx], args[label_namer_idx])
+            args = replaced
 
         while args:
             this, args = args[:2], args[2:]
@@ -359,9 +401,6 @@ class _process_plot_var_args(object):
                         (linestyle, marker, color)):
             if v is not None:
                 kw[k] = v
-
-        if 'label' not in kwargs or kwargs['label'] is None:
-            kwargs['label'] = get_label(tup[-1], None)
 
         if len(tup) == 2:
             x = _check_1d(tup[0])
@@ -697,8 +736,7 @@ class _AxesBase(martist.Artist):
             place axis elements in different locations.
 
         """
-        labels_align = matplotlib.rcParams["xtick.alignment"]
-
+        labels_align = rcParams["xtick.alignment"]
         return (self.get_xaxis_transform(which='tick1') +
                 mtransforms.ScaledTranslation(0, -1 * pad_points / 72,
                                               self.figure.dpi_scale_trans),
@@ -725,7 +763,7 @@ class _AxesBase(martist.Artist):
             place axis elements in different locations.
 
         """
-        labels_align = matplotlib.rcParams["xtick.alignment"]
+        labels_align = rcParams["xtick.alignment"]
         return (self.get_xaxis_transform(which='tick2') +
                 mtransforms.ScaledTranslation(0, pad_points / 72,
                                               self.figure.dpi_scale_trans),
@@ -777,7 +815,7 @@ class _AxesBase(martist.Artist):
             place axis elements in different locations.
 
         """
-        labels_align = matplotlib.rcParams["ytick.alignment"]
+        labels_align = rcParams["ytick.alignment"]
         return (self.get_yaxis_transform(which='tick1') +
                 mtransforms.ScaledTranslation(-1 * pad_points / 72, 0,
                                               self.figure.dpi_scale_trans),
@@ -804,8 +842,7 @@ class _AxesBase(martist.Artist):
             place axis elements in different locations.
 
         """
-        labels_align = matplotlib.rcParams["ytick.alignment"]
-
+        labels_align = rcParams["ytick.alignment"]
         return (self.get_yaxis_transform(which='tick2') +
                 mtransforms.ScaledTranslation(pad_points / 72, 0,
                                               self.figure.dpi_scale_trans),
@@ -1766,7 +1803,7 @@ class _AxesBase(martist.Artist):
         `~.pyplot.viridis`, and other functions such as `~.pyplot.clim`.  The
         current image is an attribute of the current axes.
         """
-        if isinstance(im, matplotlib.contour.ContourSet):
+        if isinstance(im, mpl.contour.ContourSet):
             if im.collections[0] not in self.collections:
                 raise ValueError("ContourSet must be in current Axes")
         elif im not in self.images and im not in self.collections:
