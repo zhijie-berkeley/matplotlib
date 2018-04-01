@@ -575,7 +575,7 @@ def _get_home():
     return None
 
 
-def _create_tmp_config_dir():
+def _create_tmp_config_or_cache_dir():
     """
     If the config directory can not be created, create a temporary
     directory.
@@ -623,7 +623,7 @@ def _get_config_or_cache_dir(xdg_base):
         configdir = os.path.abspath(configdir)
         Path(configdir).mkdir(parents=True, exist_ok=True)
         if not _is_writable_dir(configdir):
-            return _create_tmp_config_dir()
+            return _create_tmp_config_or_cache_dir()
         return configdir
 
     p = None
@@ -647,7 +647,7 @@ def _get_config_or_cache_dir(xdg_base):
             else:
                 return p
 
-    return _create_tmp_config_dir()
+    return _create_tmp_config_or_cache_dir()
 
 
 def _get_configdir():
