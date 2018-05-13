@@ -36,4 +36,5 @@ The following classes, methods, functions, and attributes are deprecated:
 - ``text.Annotation.arrow``,
 
 The following rcParams are deprecated:
+- ``examples.directory`` (use ``datapath`` instead),
 - ``pgf.debug`` (the pgf backend relies on logging),
