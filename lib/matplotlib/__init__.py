@@ -701,6 +701,10 @@ def _get_data_path():
         if not os.path.isdir(path):
             raise RuntimeError('Path in environment MATPLOTLIBDATA not a '
                                'directory')
+        cbook.warn_deprecated(
+            "3.0", "The MATPLOTLIBDATA environment variable is deprecated "
+            "since Matplotlib 3.0 and will have no effect starting from "
+            "Matplotlib 3.2.")
         return path
 
     _file = _decode_filesystem_path(__file__)
