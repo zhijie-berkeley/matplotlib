@@ -6,11 +6,6 @@ setup.cfg.template for more information.
 # NOTE: This file must remain Python 2 compatible for the foreseeable future,
 # to ensure that we error out properly for people with outdated setuptools
 # and/or pip.
-from string import Template
-from setuptools import setup
-from setuptools.command.test import test as TestCommand
-from setuptools.command.build_ext import build_ext as BuildExtCommand
-
 import sys
 
 if sys.version_info < (3, 5):
@@ -24,10 +19,18 @@ Make sure you have pip >= 9.0.1.
 """
     sys.exit(error)
 
+import os
+from pathlib import Path
+from string import Template
+import urllib.request
+
+from setuptools import setup
+from setuptools.command.test import test as TestCommand
+from setuptools.command.build_ext import build_ext as BuildExtCommand
+
 # distutils is breaking our sdists for files in symlinked dirs.
 # distutils will copy if os.link is not available, so this is a hack
 # to force copying
-import os
 try:
     del os.link
 except AttributeError:
@@ -135,6 +138,65 @@ class BuildExtraLibraries(BuildExtCommand):
 cmdclass = versioneer.get_cmdclass()
 cmdclass['test'] = NoopTestCommand
 cmdclass['build_ext'] = BuildExtraLibraries
+
+
+# TODO: Check if hash of possinly already existing jquery matches.
+# TODO: Factor out common code.
+# TODO: Also download jquery-ui, and the non-minified versions.
+# TODO: Update gitignore.
+
+
+from setuptools.command.develop import develop
+from setuptools.command.install_lib import install_lib
+
+
+# Relying on versioneer's implementation detail.
+class sdist_with_jquery(cmdclass['sdist']):
+    def make_release_tree(self, base_dir, files):
+        super().make_release_tree(base_dir, files)
+        url = "https://code.jquery.com/jquery-3.3.1.min.js"
+        dest_dir = "lib/matplotlib/backends/web_backend/jquery/js"
+        dest = Path(base_dir,
+                    dest_dir, Path(urllib.parse.urlparse(url).path).name)
+        if not dest.exists():
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            print("DOWNLOADING JQUERY TO {}".format(dest))
+            with urllib.request.urlopen(url) as req:
+                dest.write_bytes(req.read())
+
+
+# Affects install and bdist_wheel.
+class install_lib_with_jquery(install_lib):
+    def run(self):
+        super().run()
+        url = "https://code.jquery.com/jquery-3.3.1.min.js"
+        dest_dir = "matplotlib/backends/web_backend/jquery/js"
+        dest = Path(self.install_dir,
+                    dest_dir, Path(urllib.parse.urlparse(url).path).name)
+        if not dest.exists():
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            print("DOWNLOADING JQUERY TO {}".format(dest))
+            with urllib.request.urlopen(url) as req:
+                dest.write_bytes(req.read())
+
+
+class develop_with_jquery(develop):
+    def run(self):
+        super().run()
+        url = "https://code.jquery.com/jquery-3.3.1.min.js"
+        dest_dir = "lib/matplotlib/backends/web_backend/jquery/js"
+        dest = Path(dest_dir, Path(urllib.parse.urlparse(url).path).name)
+        if not dest.exists():
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            print("DOWNLOADING JQUERY TO {}".format(dest))
+            with urllib.request.urlopen(url) as req:
+                dest.write_bytes(req.read())
+
+
+cmdclass['sdist'] = sdist_with_jquery
+cmdclass['install_lib'] = install_lib_with_jquery
+cmdclass['develop'] = develop_with_jquery
+
 
 # One doesn't normally see `if __name__ == '__main__'` blocks in a setup.py,
 # however, this is needed on Windows to avoid creating infinite subprocesses
