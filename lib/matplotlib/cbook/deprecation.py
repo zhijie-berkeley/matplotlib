@@ -40,7 +40,8 @@ def _generate_deprecation_message(
                    if removal else
                    "")))
             + "."
-            + (" Use {alternative} instead." if alternative else ""))
+            + (" Use {alternative} instead." if alternative else "")
+            + (" {addendum}" if addendum else ""))
 
     return message.format(func=name, name=name, obj_type=obj_type, since=since,
                           removal=removal, alternative=alternative)
@@ -99,7 +100,8 @@ def warn_deprecated(
 
     """
     message = _generate_deprecation_message(
-        since, message, name, alternative, pending, obj_type, removal=removal)
+        since, message, name, alternative, pending, obj_type, addendum,
+        removal=removal)
     warnings.warn(message, mplDeprecation, stacklevel=2)
 
 
