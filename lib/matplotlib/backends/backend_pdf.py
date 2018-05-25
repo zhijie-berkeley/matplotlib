@@ -2582,11 +2582,9 @@ class FigureCanvasPdf(FigureCanvasBase):
                 file.close()
 
 
-class FigureManagerPdf(FigureManagerBase):
-    pass
+FigureManagerPdf = FigureManagerBase
 
 
 @_Backend.export
 class _BackendPdf(_Backend):
     FigureCanvas = FigureCanvasPdf
-    FigureManager = FigureManagerPdf
