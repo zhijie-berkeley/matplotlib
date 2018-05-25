@@ -25,7 +25,7 @@ the `rc file <http://matplotlib.org/users/customizing.html>`.
 And significantly, for those interested in mathematical
 or scientific figures, matplotlib implements a large number of TeX
 math symbols and commands, supporting :ref:`mathematical expressions
-<sphx_glr_tutorials_text_mathtext.py>` anywhere in your figure.
+</tutorials/text/mathtext>` anywhere in your figure.
 
 
 Basic text commands
